@@ -1,0 +1,100 @@
+* {
+    font-family: "C64 Pro Mono";
+    color: gainsboro;
+}
+
+body {
+    background-color: #606060;
+}
+
+console .border {
+    position: absolute;
+    background-color: #6080F0;
+    height: 250px;
+    width: 380px;
+    top: 50px;
+    left: 5px;
+}
+
+console .background {
+    background-color: #2020C0;
+    position: absolute;
+    height: 200px;
+    width: 320px;
+    top: 75px;
+    left: 35px;
+}
+
+console .foreground {
+    background-color: transparent;
+    position: absolute;
+    color: #6080F0;
+    height: 200px;
+    width: 320px;
+    top: 75px;
+    left: 35px;
+}
+
+console .background0 {
+    background-color: black;
+}
+
+console .background1 {
+    background-color: white;
+}
+
+console .background2 {
+    background-color: #C00000;
+}
+
+console .background3 {
+    background-color: #00FFFF;
+}
+
+console .background4 {
+    background-color: #A020A0;
+}
+
+console .background5 {
+    background-color: #20A020;
+}
+
+console .background6 {
+    background-color: #4040C0;
+}
+
+console .background7 {
+    background-color: #FFFF80;
+}
+
+console .background8 {
+    background-color: #F08000;
+}
+
+console .background9 {
+    background-color: #804000;
+}
+
+console .background10 {
+    background-color: #C02020;
+}
+
+console .background11 {
+    background-color: #404040;
+}
+
+console .background12 {
+    background-color: #808080
+}
+
+console .background13 {
+    background-color: #A0FFA0;
+}
+
+console .background14 {
+    background-color: #6080F0;
+}
+
+console .background15 {
+    background-color: #C0C0C0;
+}
