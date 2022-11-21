@@ -116,6 +116,32 @@ class CbmishConsole {
         return 32;        
     }
 
+    poke(address: number, value: number) {
+
+        if (address < 1024 || address >= 2024)
+            return;
+        if (value < 0 || value > 255)
+            throw "expected value 0 to 255";
+
+        const i = value*8;
+
+        let col = (address - 1024) % this.cols;
+        let row = Math.floor((address - 1024) / this.rows);
+
+        const chardata = [
+            c64_char_rom[i], 
+            c64_char_rom[i+1],
+            c64_char_rom[i+2],
+            c64_char_rom[i+3],
+            c64_char_rom[i+4],
+            c64_char_rom[i+5],
+            c64_char_rom[i+6],
+            c64_char_rom[i+7],
+        ];
+
+        this.drawC64Char(chardata, col*8, row*8, this.fg);
+    }
+
     drawC64Char(chardata: number[], x: number, y: number, fg: number) {
         let b: number;
         let r: number;
