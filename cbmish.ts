@@ -23,21 +23,23 @@ class CbmishConsole {
     dirtywidth = 0;
     dirtyheight = 0;
     fg = 14;
-
     row = 0;
     col = 0;
+    lowercase: boolean = true;
 
-    rows = 24;
+    rows = 25;
     cols = 40;
 
     canvas: any = document.getElementById("screen");
     ctx = this.canvas?.getContext("2d");
     imgData = this.ctx.getImageData(0, 0, 320, 200);
     bitmap = this.imgData.data;
-    bgcells: number[] = [];
 
-    CbmishConsole() {
-        this.clear();
+    charCells: number[] = [];
+    colorCells: number[] = [];
+
+    public CbmishConsole() {
+        this.init();
     }
 
     public init() {
@@ -45,8 +47,9 @@ class CbmishConsole {
         this.background(6);
         this.foreground(14);
 	    this.clear();
-        this.out('\r    **** HTML/CSS/TYPESCRIPT ****\r\r');
-        this.out('1GB RAM SYSTEM  1073741824 BYTES FREE\r\r');
+        this.out('\r    **** HTML/CSS/TYPESCRIPT ****\r');
+        this.out('   github.com/davervw/cbmish-script\r\r');
+        this.out(' 1GB RAM SYSTEM  1073741824 BYTES FREE\r\r');
         this.out('READY.\r');    
     }
 
@@ -74,7 +77,11 @@ class CbmishConsole {
         if (c < 32 || c >= 127)
             return;
 
-        const i = this.ascii_to_petscii(c)*8;
+        const petscii = this.ascii_to_petscii(c);
+        const i = petscii*8;
+
+        this.charCells[this.col + this.row * this.cols] = petscii;
+        this.colorCells[this.col + this.row * this.cols] = this.fg;
 
         const chardata = [
             c64_char_rom[i], 
@@ -88,7 +95,7 @@ class CbmishConsole {
         ];
 
         this.drawC64Char(chardata, this.col*8, this.row*8, this.fg);
-        
+
         if (++this.col >= this.cols) {
             this.col = 0;
             if (++this.row >= this.rows)
@@ -104,7 +111,8 @@ class CbmishConsole {
 
     clear() {
         this.home();
-	    for (let i=0; i<1000; ++i)
+        let limit = this.rows * this.cols;
+	    for (let i=0; i<limit; ++i)
 	        this.out(' ');
 	    this.row = 0;
     }
@@ -118,19 +126,34 @@ class CbmishConsole {
         if (c < 32) return 32;
         if (c > 127) return 32;
         if (c >= 32 && c <= 63) return c;
-        if (c >= 64 && c <= 64+30) return c-64; // @ABC...Z[\]_
-        if (c >= 97 && c <= 96+26) return c-96; // TODO: lowercase
+        if (this.lowercase) {
+            if (c >= 64 && c <= 64+30) return c-64; // @ABC...Z[\]_
+            if (c >= 97 && c <= 96+26) return c-96+256;
+        } else {
+            if (c >= 64 && c <= 64+30) return c-64; // @ABC...Z[\]_
+            if (c >= 97 && c <= 96+26) return c-96; // TODO: graphics
+        }
         return 32;        
     }
 
-    poke(address: number, value: number) {
+    public poke(address: number, value: number) {
+        if (address >= 1024 && address < 1024+this.rows*this.cols)
+            this.pokeScreen(address, value);
+        else if (address >= 13.5*4096 && address < 13.5*4096+this.rows*this.cols) {
+            this.colorCells[address - 13.5*4096] = value & 0xF;
+            this.pokeScreen(address - 13.5*4096 + 1024, this.charCells[address - 13.5*4096]);
+        }
+    }
 
+    private pokeScreen(address: number, value: number) {
         if (address < 1024 || address >= 2024)
             return;
         if (value < 0 || value > 255)
             throw "expected value 0 to 255";
 
         const i = value*8;
+
+        this.charCells[address-1024] = value;
 
         let col = (address - 1024) % this.cols;
         let row = Math.floor((address - 1024) / this.cols);
@@ -146,7 +169,7 @@ class CbmishConsole {
             c64_char_rom[i+7],
         ];
 
-        this.drawC64Char(chardata, col*8, row*8, this.fg);
+        this.drawC64Char(chardata, col*8, row*8, this.colorCells[address - 1024]);
     }
 
     drawC64Char(chardata: number[], x: number, y: number, fg: number) {
@@ -154,7 +177,7 @@ class CbmishConsole {
         let r: number;
       
         fg = fg & 0xF;
-      
+
         for (r = 0; r < 8; ++r) {
           for (b = 0; b < 8; ++b) {
             var j = (x+(7-b) + (y+r)*320)*4;
