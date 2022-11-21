@@ -27,12 +27,11 @@ class CbmishConsole {
     col = 0;
     lowercase: boolean = true;
 
-    rows = 25;
-    cols = 40;
-
     canvas: any = document.getElementById("screen");
+    rows = Math.floor(this.canvas.getAttribute('height') / 8);
+    cols = Math.floor(this.canvas.getAttribute('width') / 8);   
     ctx = this.canvas?.getContext("2d");
-    imgData = this.ctx.getImageData(0, 0, 320, 200);
+    imgData = this.ctx.getImageData(0, 0, this.cols*8, this.rows*8);
     bitmap = this.imgData.data;
 
     charCells: number[] = [];
@@ -180,7 +179,7 @@ class CbmishConsole {
 
         for (r = 0; r < 8; ++r) {
           for (b = 0; b < 8; ++b) {
-            var j = (x+(7-b) + (y+r)*320)*4;
+            var j = (x+(7-b) + (y+r)*this.cols*8)*4;
             if ((chardata[r] & (1 << b)) != 0) {
               this.bitmap[j + 0] = C64colors[fg][0];
               this.bitmap[j + 1] = C64colors[fg][1];
