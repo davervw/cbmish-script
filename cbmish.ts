@@ -41,12 +41,14 @@ class CbmishConsole {
     }
 
     public init() {
+	this.clear();
         this.out('\r    **** HTML/CSS/TYPESCRIPT ****\r\r');
         this.out('1GB RAM SYSTEM  1073741824 BYTES FREE\r\r');
         this.out('READY.\r');    
     }
 
-    public out(s: string) { 
+    public out(obj: any) {
+        const s = obj.toString();
         for (var i = 0; i < s.length; ++i)
             this.outChar(s.charAt(i)); 
     }
@@ -98,8 +100,10 @@ class CbmishConsole {
     }
 
     clear() {
-        this.ctx.clearRect(0, 0, 320, 200);
         this.home();
+	for (const i=0; i<1000; ++i)
+	    this.out(' ');
+	this.row = 0;
     }
 
     home() {
