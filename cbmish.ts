@@ -99,10 +99,10 @@ class CbmishConsole {
         if (c < 32 || c >= 127)
             return;
 
-        const petscii = this.ascii_to_petscii(c);
-        let i = petscii*8;
+        let petscii = this.ascii_to_petscii(c);
         if (this.reverse)
-            i += 128*8;
+            petscii += 128;
+        const i = petscii*8;
 
         this.charCells[this.col + this.row * this.cols] = petscii;
         this.colorCells[this.col + this.row * this.cols] = this.fg;
@@ -166,7 +166,7 @@ class CbmishConsole {
             this.pokeScreen(address, value);
         else if (address >= 13.5*4096 && address < 13.5*4096+this.rows*this.cols) {
             this.colorCells[address - 13.5*4096] = value & 0xF;
-            let c = this.charCells[address - 13.5*4096] & 255;
+            let c = this.charCells[address - 13.5*4096];
             this.pokeScreen(address - 13.5*4096 + 1024, c);
         }
     }
@@ -174,12 +174,10 @@ class CbmishConsole {
     private pokeScreen(address: number, value: number) {
         if (address < 1024 || address >= 2024)
             return;
-        if (value < 0 || value > 255)
-            throw "expected value 0 to 255";
+        if (value < 0 || value > 511)
+            throw "expected value 0 to 511";
 
         let i = value*8;
-        if (this.lowercase)
-            i += 256*8;
 
         this.charCells[address-1024] = value;
 
