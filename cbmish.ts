@@ -101,9 +101,9 @@ class CbmishConsole {
 
     clear() {
         this.home();
-	for (const i=0; i<1000; ++i)
-	    this.out(' ');
-	this.row = 0;
+	    for (let i=0; i<1000; ++i)
+	        this.out(' ');
+	    this.row = 0;
     }
 
     home() {
