@@ -150,7 +150,9 @@ class CbmishConsole {
         if (value < 0 || value > 255)
             throw "expected value 0 to 255";
 
-        const i = value*8;
+        let i = value*8;
+        if (this.lowercase)
+            i += 256*8;
 
         this.charCells[address-1024] = value;
 
