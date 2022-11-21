@@ -4,25 +4,6 @@
 // github.com/davervw/cbmish-script
 // davevw.com
 
-const C64colors: number[][] = [
-    [0, 0, 0, 255],       // [0] black
-    [255, 255, 255, 255], // [1] white
-    [192, 0, 0, 255],     // [2] red
-    [0, 255, 255, 255],   // [3] cyan
-    [160, 32, 160, 255],  // [4] purple
-    [32, 160, 32, 255],   // [5] green
-    [64, 64, 192, 255],   // [6] blue
-    [255, 255, 128, 255], // [7] yellow
-    [255, 128, 0, 255],   // [8] orange
-    [128, 64, 0, 255],    // [9] brown  
-    [192, 32, 32, 255],   // [10] lt red
-    [64, 64, 64, 255],    // [11] dk gray
-    [128, 128, 128, 255], // [12] med gray
-    [160, 255, 160, 255], // [13] lt green
-    [96, 128, 240, 255],  // [14] lt blue
-    [192, 192, 192, 255], // [15] lt gray
-  ];
-
 class CbmishConsole {
     dirtyx = 0;
     dirtyy = 0;
@@ -32,6 +13,7 @@ class CbmishConsole {
     row = 0;
     col = 0;
     lowercase: boolean = true;
+    reverse: boolean = false;
 
     canvas: any = document.getElementById("screen");
     rows = Math.floor(this.canvas.getAttribute('height') / 8);
@@ -42,6 +24,25 @@ class CbmishConsole {
 
     charCells: number[] = [];
     colorCells: number[] = [];
+
+    palette: number[][] = [
+        [0, 0, 0, 255],       // [0] black
+        [255, 255, 255, 255], // [1] white
+        [192, 0, 0, 255],     // [2] red
+        [0, 255, 255, 255],   // [3] cyan
+        [160, 32, 160, 255],  // [4] purple
+        [32, 160, 32, 255],   // [5] green
+        [64, 64, 192, 255],   // [6] blue
+        [255, 255, 128, 255], // [7] yellow
+        [255, 128, 0, 255],   // [8] orange
+        [128, 64, 0, 255],    // [9] brown  
+        [192, 32, 32, 255],   // [10] lt red
+        [64, 64, 64, 255],    // [11] dk gray
+        [128, 128, 128, 255], // [12] med gray
+        [160, 255, 160, 255], // [13] lt green
+        [96, 128, 240, 255],  // [14] lt blue
+        [192, 192, 192, 255], // [15] lt gray
+    ];
 
     public CbmishConsole() {
         this.init();
@@ -60,7 +61,7 @@ class CbmishConsole {
 
     public out(obj: any) {
         const s = obj.toString();
-        for (var i = 0; i < s.length; ++i)
+        for (let i = 0; i < s.length; ++i)
             this.outChar(s.charAt(i)); 
     }
 
@@ -69,6 +70,22 @@ class CbmishConsole {
         const c = s.charCodeAt(0);
         if (s == '\r') {
             this.newLine();
+            return;
+        }
+        if (c == 14) {
+            this.lowercase = true;
+            return;
+        }
+        if (c == 142) {
+            this.lowercase = false;
+            return;
+        }
+        if (c == 18) {
+            this.reverse = true;
+            return;
+        }
+        if (c == 146) {
+            this.reverse = false;
             return;
         }
         if (c == 19) {
@@ -83,7 +100,9 @@ class CbmishConsole {
             return;
 
         const petscii = this.ascii_to_petscii(c);
-        const i = petscii*8;
+        let i = petscii*8;
+        if (this.reverse)
+            i += 128*8;
 
         this.charCells[this.col + this.row * this.cols] = petscii;
         this.colorCells[this.col + this.row * this.cols] = this.fg;
@@ -108,21 +127,22 @@ class CbmishConsole {
         }
     }
 
-    newLine() {
+    public newLine() {
         if (++this.row >= this.rows)
             this.row = 0;
         this.col = 0;
+        this.reverse = false;
     }
 
-    clear() {
+    public clear() {
         this.home();
-        let limit = this.rows * this.cols;
+        const limit = this.rows * this.cols;
 	    for (let i=0; i<limit; ++i)
 	        this.out(' ');
 	    this.row = 0;
     }
 
-    home() {
+    public home() {
         this.row = 0;
         this.col = 0;
     }
@@ -146,7 +166,8 @@ class CbmishConsole {
             this.pokeScreen(address, value);
         else if (address >= 13.5*4096 && address < 13.5*4096+this.rows*this.cols) {
             this.colorCells[address - 13.5*4096] = value & 0xF;
-            this.pokeScreen(address - 13.5*4096 + 1024, this.charCells[address - 13.5*4096]);
+            let c = this.charCells[address - 13.5*4096] & 255;
+            this.pokeScreen(address - 13.5*4096 + 1024, c);
         }
     }
 
@@ -162,8 +183,8 @@ class CbmishConsole {
 
         this.charCells[address-1024] = value;
 
-        let col = (address - 1024) % this.cols;
-        let row = Math.floor((address - 1024) / this.cols);
+        const col = (address - 1024) % this.cols;
+        const row = Math.floor((address - 1024) / this.cols);
 
         const chardata = [
             c64_char_rom[i], 
@@ -180,19 +201,16 @@ class CbmishConsole {
     }
 
     drawC64Char(chardata: number[], x: number, y: number, fg: number) {
-        let b: number;
-        let r: number;
-      
         fg = fg & 0xF;
 
-        for (r = 0; r < 8; ++r) {
-          for (b = 0; b < 8; ++b) {
-            var j = (x+(7-b) + (y+r)*this.cols*8)*4;
+        for (let r = 0; r < 8; ++r) {
+          for (let b = 0; b < 8; ++b) {
+            const j = (x+(7-b) + (y+r)*this.cols*8)*4;
             if ((chardata[r] & (1 << b)) != 0) {
-              this.bitmap[j + 0] = C64colors[fg][0];
-              this.bitmap[j + 1] = C64colors[fg][1];
-              this.bitmap[j + 2] = C64colors[fg][2];
-              this.bitmap[j + 3] = C64colors[fg][3];
+              this.bitmap[j + 0] = this.palette[fg][0];
+              this.bitmap[j + 1] = this.palette[fg][1];
+              this.bitmap[j + 2] = this.palette[fg][2];
+              this.bitmap[j + 3] = this.palette[fg][3];
             }
             else
               this.bitmap[j + 3] = 0; // set alpha component to transparent
@@ -201,8 +219,7 @@ class CbmishConsole {
       
         requestAnimationFrame(() => this.animationCallback());
       
-        if (this.dirtywidth == 0 && this.dirtyheight == 0)
-        {
+        if (this.dirtywidth == 0 && this.dirtyheight == 0) {
           this.dirtyx = x;
           this.dirtyy = y;
           this.dirtywidth = 8;
@@ -232,16 +249,16 @@ class CbmishConsole {
         this.dirtyheight = 0;
     }      
 
-    foreground(fg: number) {
+    public foreground(fg: number) {
         this.fg = fg;
     }
 
-    background(bg: number) {
+    public background(bg: number) {
         const canvas = document.getElementsByTagName('canvas');
         canvas[1].outerHTML = `<canvas class="background background${(bg & 0xF)}"></canvas>`
     }
 
-    border(color: number) {
+    public border(color: number) {
         const canvas = document.getElementsByTagName('canvas');
         canvas[0].outerHTML = `<canvas class="border border${(color & 0xF)}"></canvas>`
     }
