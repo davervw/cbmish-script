@@ -38,6 +38,7 @@ console .foreground {
     color: #6080F0;
     height: 200px;
     width: 320px;
+    aspect-ratio: auto 320 / 200;
     top: 75px;
     left: 35px;
     border: 0;

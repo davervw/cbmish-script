@@ -23,7 +23,6 @@ class CbmishConsole {
     dirtywidth = 0;
     dirtyheight = 0;
     fg = 14;
-    bg = 6;
 
     row = 0;
     col = 0;
@@ -35,6 +34,7 @@ class CbmishConsole {
     ctx = this.canvas?.getContext("2d");
     imgData = this.ctx.getImageData(0, 0, 320, 200);
     bitmap = this.imgData.data;
+    bgcells: number[] = [];
 
     CbmishConsole() {
         this.clear();
@@ -133,7 +133,7 @@ class CbmishConsole {
         const i = value*8;
 
         let col = (address - 1024) % this.cols;
-        let row = Math.floor((address - 1024) / this.rows);
+        let row = Math.floor((address - 1024) / this.cols);
 
         const chardata = [
             c64_char_rom[i], 
