@@ -41,7 +41,10 @@ class CbmishConsole {
     }
 
     public init() {
-	this.clear();
+        this.border(14);
+        this.background(6);
+        this.foreground(14);
+	    this.clear();
         this.out('\r    **** HTML/CSS/TYPESCRIPT ****\r\r');
         this.out('1GB RAM SYSTEM  1073741824 BYTES FREE\r\r');
         this.out('READY.\r');    
@@ -206,5 +209,10 @@ class CbmishConsole {
     background(bg: number) {
         const canvas = document.getElementsByTagName('canvas');
         canvas[1].outerHTML = `<canvas class="background background${(bg & 0xF)}"></canvas>`
+    }
+
+    border(color: number) {
+        const canvas = document.getElementsByTagName('canvas');
+        canvas[0].outerHTML = `<canvas class="border border${(color & 0xF)}"></canvas>`
     }
 }
