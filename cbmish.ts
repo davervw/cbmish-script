@@ -1,3 +1,9 @@
+// cbmish.ts
+// Console (display output) that has features resembling an 8-bit classic system
+// Copyright (c) 2022 by David R. Van Wagner
+// github.com/davervw/cbmish-script
+// davevw.com
+
 const C64colors: number[][] = [
     [0, 0, 0, 255],       // [0] black
     [255, 255, 255, 255], // [1] white
