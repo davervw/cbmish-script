@@ -20,6 +20,4 @@ Sample usage from developer tools console:
 
 ![Sample usage](console.png)
 
-Warning: current limitation is that scrolling is not implemented.   10 PRINT"HELLO":GOTO 10 isn't going to work for a number of reasons.
-
-(Hint: to change rows/columns, adjust the height/width attributes (in pixels) of the screen canvas in the HTML file.  The class will divide each by 8 pixels.   For example, try changing width attribute to 640.)
+(Hint: to change rows/columns, adjust the height/width attributes (in pixels) of the screen canvas in the HTML file.  The class will divide each by 8 pixels.   For example, try changing width attribute to 640 for an 80 column screen, then manually zoom the screen to see it better.)
