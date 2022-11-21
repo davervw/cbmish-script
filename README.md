@@ -13,6 +13,7 @@ To build the JavaScript .js files referenced by index.html, use tsc (TypeScript 
     tsc -w cbmish.ts c64font.ts sample.ts
 
 Sample usage from developer tools console:
+
     const cbm = new CbmishConsole()
     cbm.CbmishConsole()
     cbm.foreground(1)
