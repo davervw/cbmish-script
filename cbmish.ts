@@ -123,23 +123,31 @@ class CbmishConsole {
         if (++this.col >= this.cols) {
             this.col = 0;
             if (++this.row >= this.rows)
-                this.row = 0;
+            {
+                this.row = this.rows-1;
+                this.scrollScreen();
+            }
         }
     }
 
     public newLine() {
         if (++this.row >= this.rows)
-            this.row = 0;
+        {
+            this.row = this.rows-1;
+            this.scrollScreen();
+        }
         this.col = 0;
         this.reverse = false;
     }
 
     public clear() {
         this.home();
-        const limit = this.rows * this.cols;
+        const limit = this.rows * this.cols - 1; // one less to avoid scroll
 	    for (let i=0; i<limit; ++i)
 	        this.out(' ');
-	    this.row = 0;
+        this.poke(1024 + limit, 32);
+        this.poke(13.5 * 4096 + limit, this.fg);
+	    this.home();
     }
 
     public home() {
@@ -236,7 +244,29 @@ class CbmishConsole {
         } else if (y+8 > this.dirtyy + this.dirtyheight)
           this.dirtyheight += (y+8 - (this.dirtyy + this.dirtyheight));
     }
-      
+    
+    scrollScreen() {
+        // remove top line of screen from memory
+        this.charCells.splice(0, this.cols);
+        this.colorCells.splice(0, this.cols);
+        
+        // add back empty last line in memory
+        const offset = this.rows*(this.cols-1);
+        for (let i=0; i<this.cols; ++i) {
+            this.charCells[i+offset] = 32;
+            this.colorCells[i+offset] = this.fg;
+        }
+
+        // redraw from char/color cells memory
+        this.redraw();
+    }
+
+    redraw() { // redraw screen by applying color to each cell
+        const limit = this.rows*this.cols;
+        for (let i=0; i<limit; ++i)
+            this.poke(13.5*4096 + i, this.colorCells[i]);
+    }
+
     animationCallback() {
         if (this.dirtywidth == 0 || this.dirtyheight == 0)
           return;
