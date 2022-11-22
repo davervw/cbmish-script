@@ -18,6 +18,7 @@ class CbmishConsole {
     cursorShown: boolean = false;
     cursorSaveColor: number;
     cursorIntervalId: number | undefined;
+    escapePressed: boolean = false;
 
     canvas: any = document.getElementById("screen");
     rows = Math.floor(this.canvas.getAttribute('height') / 8);
@@ -53,6 +54,7 @@ class CbmishConsole {
         this.blinkCursor();
         window.addEventListener('keypress', (event: KeyboardEvent) => { this.keypress(event); });
         window.addEventListener('keydown', (event: KeyboardEvent) => { this.keydown(event.key, event.shiftKey, event.ctrlKey, event.altKey); });
+        window.addEventListener('keyup', (event: KeyboardEvent) => { this.keyup(event.key, event.shiftKey, event.ctrlKey, event.altKey); });
     }
 
     public init() {
@@ -512,7 +514,6 @@ class CbmishConsole {
     }
 
     public keydown(key: string, shiftKey: boolean, ctrlKey: boolean, altKey: boolean) {
-        //console.log(`${shiftKey} ${ctrlKey} ${altKey} ${key}`);
         if (key == 'Home' && !altKey) {
             if (shiftKey && !ctrlKey)
                 this.clear()
@@ -552,5 +553,16 @@ class CbmishConsole {
         } else if (key == 'Insert' && !ctrlKey && !altKey
                 || (key == 'Backspace' || key == 'Delete') && shiftKey && !ctrlKey && !altKey)
             this.insert();
+        else if (key == 'Escape' && !shiftKey && !ctrlKey && !altKey)
+            this.escapePressed = true;
+        else if (key == 'PageUp' && !shiftKey && !ctrlKey && !altKey && this.escapePressed)
+            this.init();
+        else if (key == 'Cancel' && !shiftKey && ctrlKey && !altKey)
+            this.init();
+    }
+
+    public keyup(key: string, shiftKey: boolean, ctrlKey: boolean, altKey: boolean) {
+        if (key == 'Escape' && !shiftKey && !ctrlKey && !altKey)
+            this.escapePressed = false;
     }
 }
