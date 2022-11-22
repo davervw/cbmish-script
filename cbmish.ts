@@ -433,10 +433,9 @@ class CbmishConsole {
         this.colorCells.splice(0, this.cols);
         
         // add back empty last line in memory
-        const offset = this.rows*(this.cols-1);
         for (let i=0; i<this.cols; ++i) {
-            this.charCells[i+offset] = 32;
-            this.colorCells[i+offset] = this.fg;
+            this.charCells.push(32);
+            this.colorCells.push(this.fg);
         }
 
         // redraw from char/color cells memory
