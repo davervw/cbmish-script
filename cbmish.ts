@@ -14,6 +14,10 @@ class CbmishConsole {
     col = 0;
     lowercase: boolean = true;
     reverse: boolean = false;
+    cursorBlinking: boolean = false;
+    cursorShown: boolean = false;
+    cursorSaveColor: number;
+    cursorIntervalId: number | undefined;
 
     canvas: any = document.getElementById("screen");
     rows = Math.floor(this.canvas.getAttribute('height') / 8);
@@ -46,6 +50,7 @@ class CbmishConsole {
 
     public CbmishConsole() {
         this.init();
+        this.blinkCursor();
     }
 
     public init() {
@@ -59,13 +64,18 @@ class CbmishConsole {
         this.out('READY.\r');    
     }
 
-    public out(obj: any) {
+    public out(obj: any) {        
+        let wasBlinking = this.hideCursor();
+        
         const s = obj.toString();
         for (let i = 0; i < s.length; ++i)
             this.outChar(s.charAt(i)); 
+        
+        if (wasBlinking)
+            this.blinkCursor();
     }
 
-    outChar(s: string) {
+    private outChar(s: string) {
         if (s.length != 1) throw "expected string of exactly one character";
         const c = s.charCodeAt(0);
         if (s == '\r') {
@@ -131,6 +141,8 @@ class CbmishConsole {
     }
 
     public newLine() {
+        let wasBlinking = this.hideCursor();
+        
         if (++this.row >= this.rows)
         {
             this.row = this.rows-1;
@@ -138,9 +150,14 @@ class CbmishConsole {
         }
         this.col = 0;
         this.reverse = false;
+        
+        if (wasBlinking)
+            this.blinkCursor();
     }
 
     public clear() {
+        let wasBlinking = this.hideCursor();
+        
         this.home();
         const limit = this.rows * this.cols - 1; // one less to avoid scroll
 	    for (let i=0; i<limit; ++i)
@@ -148,14 +165,22 @@ class CbmishConsole {
         this.poke(1024 + limit, 32);
         this.poke(13.5 * 4096 + limit, this.fg);
 	    this.home();
+        
+        if (wasBlinking)
+            this.blinkCursor();
     }
 
     public home() {
+        let wasBlinking = this.hideCursor();
+
         this.row = 0;
         this.col = 0;
+
+        if (wasBlinking)
+            this.blinkCursor();
     }
 
-    ascii_to_petscii(c: number): number {
+    private ascii_to_petscii(c: number): number {
         if (c < 32) return 32;
         if (c > 127) return 32;
         if (c >= 32 && c <= 63) return c;
@@ -170,6 +195,8 @@ class CbmishConsole {
     }
 
     public poke(address: number, value: number) {
+        let wasBlinking = this.hideCursor();
+        
         if (address >= 1024 && address < 1024+this.rows*this.cols)
             this.pokeScreen(address, value);
         else if (address >= 13.5*4096 && address < 13.5*4096+this.rows*this.cols) {
@@ -177,6 +204,9 @@ class CbmishConsole {
             let c = this.charCells[address - 13.5*4096];
             this.pokeScreen(address - 13.5*4096 + 1024, c);
         }
+        
+        if (wasBlinking)
+            this.blinkCursor();
     }
 
     private pokeScreen(address: number, value: number) {
@@ -262,9 +292,12 @@ class CbmishConsole {
     }
 
     redraw() { // redraw screen by applying color to each cell
+        let wasBlinking = this.hideCursor();
         const limit = this.rows*this.cols;
         for (let i=0; i<limit; ++i)
             this.poke(13.5*4096 + i, this.colorCells[i]);
+        if (wasBlinking)
+            this.blinkCursor();
     }
 
     animationCallback() {
@@ -289,5 +322,35 @@ class CbmishConsole {
     public border(color: number) {
         const canvas = document.getElementsByTagName('canvas');
         canvas[0].outerHTML = `<canvas class="border border${(color & 0xF)}"></canvas>`
+    }
+
+    public hideCursor(): boolean {
+        let wasBlinking = this.cursorBlinking;
+        if (this.cursorShown)
+            this.blinkCursor();
+        if (this.cursorBlinking) {
+            clearInterval(this.cursorIntervalId);
+            this.cursorIntervalId = undefined;
+            this.cursorBlinking = false;
+        }
+        return wasBlinking;
+    }
+
+    public blinkCursor() {
+        if (!this.cursorBlinking) {
+            this.cursorIntervalId = setInterval(() => this.blinkCursor(), 500);
+            this.cursorBlinking = true;
+        }
+        this.cursorBlinking = true;
+        const offset = this.col + this.row * this.cols;
+        if (this.cursorShown) {
+            this.colorCells[offset] = this.cursorSaveColor;
+            this.cursorShown = false;
+        } else {
+            this.cursorSaveColor = this.colorCells[offset];
+            this.colorCells[offset] = this.fg;
+            this.cursorShown = true;
+        }
+        this.pokeScreen(1024 + offset, this.charCells[offset] ^ 128);
     }
 }
