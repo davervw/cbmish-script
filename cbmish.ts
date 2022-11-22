@@ -51,6 +51,8 @@ class CbmishConsole {
     public CbmishConsole() {
         this.init();
         this.blinkCursor();
+        window.addEventListener('keypress', (event: KeyboardEvent) => { this.keypress(event); });
+        window.addEventListener('keydown', (event: KeyboardEvent) => { this.keydown(event.key, event.shiftKey, event.ctrlKey, event.altKey); });
     }
 
     public init() {
@@ -99,14 +101,25 @@ class CbmishConsole {
             return;
         }
         if (c == 19) {
-            this.home();
+            this.homeScreen();
+            return;
+        }
+        if (c == 20) {
+            this.delete(false);
+            return;
+        }
+        if (c == 148) {
+            this.insert();
             return;
         }
         if (c == 147) {
             this.clear();
             return;
         }
-        if (c < 32 || c >= 127)
+        if (c < 32 || c >= 126)
+            return;
+
+        if (c == 96 || c == '|'.charCodeAt(0))
             return;
 
         let petscii = this.ascii_to_petscii(c);
@@ -155,26 +168,165 @@ class CbmishConsole {
             this.blinkCursor();
     }
 
+    public delete(deleteInto: boolean) {
+        if (deleteInto && this.col == this.cols - 1)
+            return;
+        if (!deleteInto && this.col == 0) {
+            this.left();
+            return;
+        }
+
+        let wasBlinking = this.hideCursor();
+
+        let offset = this.row * this.cols;
+        let dest = this.col;
+        if (!deleteInto)
+            --dest;
+        for (let i=dest; i<this.cols-1; ++i) {
+            this.colorCells[offset + i] = this.colorCells[offset + i + 1];
+            this.pokeScreen(1024 + offset + i, this.charCells[offset + i + 1]);
+        }
+        this.colorCells[offset + this.cols - 1] = this.fg;
+        this.pokeScreen(1024 + offset + this.cols - 1, 32);
+        if (!deleteInto)
+            this.left();
+
+        if (wasBlinking)
+            this.blinkCursor();
+    }
+
+    public insert() {
+        if (this.col == this.cols - 1)
+            return;
+
+        let wasBlinking = this.hideCursor();
+
+        let offset = this.row * this.cols;
+        for (let i=this.cols-1; i>this.col; --i) {
+            this.colorCells[offset + i] = this.colorCells[offset + i - 1];
+            this.pokeScreen(1024 + offset + i, this.charCells[offset + i - 1]);
+        }
+        this.colorCells[offset + this.col] = this.fg;
+        this.pokeScreen(1024 + offset + this.col, 32);
+
+        if (wasBlinking)
+            this.blinkCursor();
+    }
+
     public clear() {
         let wasBlinking = this.hideCursor();
         
-        this.home();
+        this.homeScreen();
         const limit = this.rows * this.cols - 1; // one less to avoid scroll
 	    for (let i=0; i<limit; ++i)
 	        this.out(' ');
         this.poke(1024 + limit, 32);
         this.poke(13.5 * 4096 + limit, this.fg);
-	    this.home();
+	    this.homeScreen();
         
         if (wasBlinking)
             this.blinkCursor();
     }
 
-    public home() {
+    public homeScreen() {
         let wasBlinking = this.hideCursor();
 
         this.row = 0;
         this.col = 0;
+
+        if (wasBlinking)
+            this.blinkCursor();
+    }
+
+    public homeLine() {
+        let wasBlinking = this.hideCursor();
+
+        this.col = 0;
+
+        if (wasBlinking)
+            this.blinkCursor();
+    }
+
+    public endLine() {
+        let wasBlinking = this.hideCursor();
+
+        this.col = this.cols - 1;
+
+        if (wasBlinking)
+            this.blinkCursor();
+    }
+
+    public endScreen() {
+        let wasBlinking = this.hideCursor();
+
+        this.col = this.cols - 1;
+        this.row = this.rows - 1;
+
+        if (wasBlinking)
+            this.blinkCursor();
+    }
+
+    public left() {
+        let wasBlinking = this.hideCursor();
+
+        if (this.col > 0 || this.row > 0) {
+            if (--this.col < 0) {
+                this.col = this.cols-1;
+                --this.row;
+            }
+        }
+
+        if (wasBlinking)
+            this.blinkCursor();
+    }
+
+    public topLine() {
+        let wasBlinking = this.hideCursor();
+
+        this.row = 0;
+
+        if (wasBlinking)
+            this.blinkCursor();
+    }
+
+    public bottomLine() {
+        let wasBlinking = this.hideCursor();
+
+        this.row = this.rows - 1;
+
+        if (wasBlinking)
+            this.blinkCursor();
+    }
+
+    public right() {
+        let wasBlinking = this.hideCursor();
+
+        if (++this.col >= this.cols) {
+            this.col = 0;
+            this.down();
+        }
+
+        if (wasBlinking)
+            this.blinkCursor();
+    }
+
+    public up() {
+        let wasBlinking = this.hideCursor();
+
+        if (this.row > 0)
+            --this.row;
+
+        if (wasBlinking)
+            this.blinkCursor();
+    }
+
+    public down() {
+        let wasBlinking = this.hideCursor();
+
+        if (++this.row >= this.rows) {
+            this.scrollScreen();
+            this.row = this.rows - 1;
+        }
 
         if (wasBlinking)
             this.blinkCursor();
@@ -185,10 +337,10 @@ class CbmishConsole {
         if (c > 127) return 32;
         if (c >= 32 && c <= 63) return c;
         if (this.lowercase) {
-            if (c >= 64 && c <= 64+30) return c-64; // @ABC...Z[\]_
+            if (c >= 64 && c <= 95) return c-64; // @ABC...Z[\]_
             if (c >= 97 && c <= 96+26) return c-96+256;
         } else {
-            if (c >= 64 && c <= 64+30) return c-64; // @ABC...Z[\]_
+            if (c >= 64 && c <= 95) return c-64; // @ABC...Z[\]_
             if (c >= 97 && c <= 96+26) return c-96; // TODO: graphics
         }
         return 32;        
@@ -352,5 +504,54 @@ class CbmishConsole {
             this.cursorShown = true;
         }
         this.pokeScreen(1024 + offset, this.charCells[offset] ^ 128);
+    }
+
+    public keypress(event: KeyboardEvent) {
+        const key = event.key;
+        if (key.length == 1)
+            this.out(key);
+    }
+
+    public keydown(key: string, shiftKey: boolean, ctrlKey: boolean, altKey: boolean) {
+        console.log(`${shiftKey} ${ctrlKey} ${altKey} ${key}`);
+        if (key == 'Home' && !altKey) {
+            if (shiftKey && !ctrlKey)
+                this.clear()
+            else if (!shiftKey) // and any ctrlKey or not
+                this.homeScreen();
+        } else if (key == 'End' && !shiftKey && !altKey) {
+            if (ctrlKey)
+                this.endScreen();
+            else
+                this.endLine();
+        } else if (key == 'ArrowUp' && !altKey) {
+            if (ctrlKey)
+                this.topLine();
+            else
+                this.up();
+        } else if (key == 'ArrowDown' && !altKey) {
+            if (ctrlKey)
+                this.bottomLine();
+            else
+                this.down();
+        } else if (key == 'ArrowLeft' && !altKey) {
+            if (ctrlKey)
+                this.homeLine();
+            else
+                this.left();
+        } else if (key == 'ArrowRight' && !altKey) {
+            if (ctrlKey)
+                this.endLine();
+            else
+                this.right();
+        } else if (key == 'Enter')
+            this.newLine();
+        else if ((key == 'Backspace' || key == 'Delete') 
+                && !shiftKey && !ctrlKey && !altKey 
+                && (this.row > 0 || this.col > 0)) {
+            this.delete(key == 'Delete');
+        } else if (key == 'Insert' && !ctrlKey && !altKey
+                || (key == 'Backspace' || key == 'Delete') && shiftKey && !ctrlKey && !altKey)
+            this.insert();
     }
 }
