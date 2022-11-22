@@ -512,7 +512,7 @@ class CbmishConsole {
     }
 
     public keydown(key: string, shiftKey: boolean, ctrlKey: boolean, altKey: boolean) {
-        console.log(`${shiftKey} ${ctrlKey} ${altKey} ${key}`);
+        //console.log(`${shiftKey} ${ctrlKey} ${altKey} ${key}`);
         if (key == 'Home' && !altKey) {
             if (shiftKey && !ctrlKey)
                 this.clear()
