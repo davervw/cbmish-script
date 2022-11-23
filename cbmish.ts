@@ -546,7 +546,7 @@ class CbmishConsole {
             this.escapePressed = false;
     }
 
-    public repeat(fn : () => void, count: number|undefined = undefined)
+    public repeat(fn : () => void, count: number|undefined = undefined, delayms = 5)
     {
         let i=0;
         const id=setInterval( () => {
@@ -556,6 +556,6 @@ class CbmishConsole {
                 clearInterval(id);
             if (this.escapePressed)
                 this.out('\rBREAK\rREADY.\r');
-        }, 5);
+        }, delayms);
     }
 }
