@@ -171,30 +171,29 @@ class CbmishConsole {
     }
 
     public delete(deleteInto: boolean) {
-        if (deleteInto && this.col == this.cols - 1)
-            return;
-        if (!deleteInto && this.col == 0) {
-            this.left();
-            return;
-        }
-
         let wasBlinking = this.hideCursor();
+        try {
+            if (!deleteInto) {
+                let save = this.col;
+                this.left();
+                let noMove = (this.col == save);
+                if (noMove)
+                    return;
+            }
+            
+            let offset = this.row * this.cols;
+            let dest = this.col;
+            for (let i=dest; i<this.cols-1; ++i) {
+                this.colorCells[offset + i] = this.colorCells[offset + i + 1];
+                this.pokeScreen(1024 + offset + i, this.charCells[offset + i + 1]);
+            }
+            this.colorCells[offset + this.cols - 1] = this.fg;
+            this.pokeScreen(1024 + offset + this.cols - 1, 32);
 
-        let offset = this.row * this.cols;
-        let dest = this.col;
-        if (!deleteInto)
-            --dest;
-        for (let i=dest; i<this.cols-1; ++i) {
-            this.colorCells[offset + i] = this.colorCells[offset + i + 1];
-            this.pokeScreen(1024 + offset + i, this.charCells[offset + i + 1]);
+        } finally {
+            if (wasBlinking)
+                this.blinkCursor();
         }
-        this.colorCells[offset + this.cols - 1] = this.fg;
-        this.pokeScreen(1024 + offset + this.cols - 1, 32);
-        if (!deleteInto)
-            this.left();
-
-        if (wasBlinking)
-            this.blinkCursor();
     }
 
     public insert() {
@@ -547,10 +546,9 @@ class CbmishConsole {
         } else if (key == 'Enter')
             this.newLine();
         else if ((key == 'Backspace' || key == 'Delete') 
-                && !shiftKey && !ctrlKey && !altKey 
-                && (this.row > 0 || this.col > 0)) {
+                && !shiftKey && !ctrlKey && !altKey)
             this.delete(key == 'Delete');
-        } else if (key == 'Insert' && !ctrlKey && !altKey
+        else if (key == 'Insert' && !ctrlKey && !altKey
                 || (key == 'Backspace' || key == 'Delete') && shiftKey && !ctrlKey && !altKey)
             this.insert();
         else if (key == 'Escape' && !shiftKey && !ctrlKey && !altKey)
