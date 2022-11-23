@@ -1,4 +1,4 @@
 var cbm = new CbmishConsole();
 cbm.CbmishConsole();
 cbm.foreground(1);
-cbm.out('Hello World!');
+cbm.repeat(() => cbm.out('Hello World! '), 2);

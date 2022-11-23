@@ -545,4 +545,17 @@ class CbmishConsole {
         if (key == 'Escape' && !shiftKey && !ctrlKey && !altKey)
             this.escapePressed = false;
     }
+
+    public repeat(fn : () => void, count: number|undefined = undefined)
+    {
+        let i=0;
+        const id=setInterval( () => {
+            if (!this.escapePressed && (count == null || i++ < count))
+                fn();
+            else
+                clearInterval(id);
+            if (this.escapePressed)
+                this.out('\rBREAK\rREADY.\r');
+        }, 5);
+    }
 }
