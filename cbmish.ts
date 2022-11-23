@@ -132,7 +132,7 @@ class CbmishConsole {
         this.charCells[this.col + this.row * this.cols] = petscii;
         this.colorCells[this.col + this.row * this.cols] = this.fg;
 
-        const chardata = c64_char_rom.slice(i, i+7);
+        const chardata = c64_char_rom.slice(i, i+8);
 
         this.drawC64Char(chardata, this.col*8, this.row*8, this.fg);
 
@@ -366,7 +366,7 @@ class CbmishConsole {
         const col = (address - 1024) % this.cols;
         const row = Math.floor((address - 1024) / this.cols);
 
-        const chardata = c64_char_rom.slice(i, i+7);
+        const chardata = c64_char_rom.slice(i, i+8);
 
         this.drawC64Char(chardata, col*8, row*8, this.colorCells[address - 1024]);
     }
