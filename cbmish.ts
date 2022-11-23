@@ -18,6 +18,7 @@ class CbmishConsole {
     cursorShown: boolean = false;
     cursorSaveColor: number;
     cursorIntervalId: number | undefined;
+    repeatIntervalId: number | undefined;
     escapePressed: boolean = false;
 
     canvas: any = document.getElementById("screen");
@@ -51,13 +52,13 @@ class CbmishConsole {
 
     public CbmishConsole() {
         this.init();
-        this.blinkCursor();
         window.addEventListener('keypress', (event: KeyboardEvent) => { this.keypress(event); });
         window.addEventListener('keydown', (event: KeyboardEvent) => { this.keydown(event.key, event.shiftKey, event.ctrlKey, event.altKey); });
         window.addEventListener('keyup', (event: KeyboardEvent) => { this.keyup(event.key, event.shiftKey, event.ctrlKey, event.altKey); });
     }
 
     public init() {
+        this.hideCursor();
         this.lowercase = true;
         this.border(14);
         this.background(6);
@@ -67,6 +68,7 @@ class CbmishConsole {
         this.out('   github.com/davervw/cbmish-script\r\r');
         this.out(' 1GB RAM SYSTEM  1073741824 BYTES FREE\r\r');
         this.out('READY.\r');    
+        this.blinkCursor();
     }
 
     public out(obj: any) {        
@@ -556,16 +558,24 @@ class CbmishConsole {
             this.escapePressed = false;
     }
 
-    public repeat(fn : () => void, count: number|undefined = undefined, delayms = 5) {
-        let i=0;
-        const id=setInterval( () => {
+    public repeat(fn:() => void, count: number|undefined = undefined, delayms = 5) {
+        if (this.repeatIntervalId != null)
+            throw "repeat is already busy";
+        let wasBlinking = this.hideCursor();
+        let i = 0;
+        this.repeatIntervalId=setInterval( () => {
             if (!this.escapePressed && (count == null || i++ < count))
                 fn();
-            else
+            else {
                 clearInterval(id);
+                this.repeatIntervalId = undefined;
+                if (wasBlinking)
+                    this.blinkCursor();
+            }
             if (this.escapePressed)
                 this.out('\rBREAK\rREADY.\r');
         }, delayms);
+        return this.repeatIntervalId;
     }
 
     public chr$(value: number): string|undefined {
