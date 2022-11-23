@@ -69,6 +69,7 @@ class CbmishConsole {
         this.out(' 1GB RAM SYSTEM  1073741824 BYTES FREE\r\r');
         this.out('READY.\r');    
         this.blinkCursor();
+        this.foreground(1);
     }
 
     public out(obj: any) {        
