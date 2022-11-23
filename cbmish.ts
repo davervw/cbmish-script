@@ -568,7 +568,7 @@ class CbmishConsole {
             if (!this.escapePressed && (count == null || i++ < count))
                 fn();
             else {
-                clearInterval(id);
+                clearInterval(this.repeatIntervalId);
                 this.repeatIntervalId = undefined;
                 if (wasBlinking)
                     this.blinkCursor();
