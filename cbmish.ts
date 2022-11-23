@@ -58,6 +58,7 @@ class CbmishConsole {
     }
 
     public init() {
+        this.lowercase = true;
         this.border(14);
         this.background(6);
         this.foreground(14);
@@ -69,8 +70,11 @@ class CbmishConsole {
     }
 
     public out(obj: any) {        
+        if (obj == null)
+            return;
+
         let wasBlinking = this.hideCursor();
-        
+
         const s = obj.toString();
         for (let i = 0; i < s.length; ++i)
             this.outChar(s.charAt(i)); 
@@ -82,49 +86,57 @@ class CbmishConsole {
     private outChar(s: string) {
         if (s.length != 1) throw "expected string of exactly one character";
         const c = s.charCodeAt(0);
-        if (s == '\r') {
-            this.newLine();
-            return;
-        }
-        if (c == 14) {
-            this.lowercase = true;
-            return;
-        }
-        if (c == 142) {
-            this.lowercase = false;
-            return;
-        }
-        if (c == 18) {
-            this.reverse = true;
-            return;
-        }
-        if (c == 146) {
-            this.reverse = false;
-            return;
-        }
-        if (c == 19) {
-            this.homeScreen();
-            return;
-        }
-        if (c == 20) {
-            this.delete(false);
-            return;
-        }
-        if (c == 148) {
-            this.insert();
-            return;
-        }
-        if (c == 147) {
-            this.clear();
-            return;
-        }
-        if (c < 32 || c >= 126)
-            return;
+        
+        let petscii: number|null = null;
 
-        if (c == 96 || c == '|'.charCodeAt(0))
-            return;
+        if (c >= 0xee00 && c <= 0xefff) {
+            petscii = c & 511;
+        } else {
+            if (s == '\r') {
+                this.newLine();
+                return;
+            }
+            if (c == 14) {
+                this.lowercase = true;
+                return;
+            }
+            if (c == 142) {
+                this.lowercase = false;
+                return;
+            }
+            if (c == 18) {
+                this.reverse = true;
+                return;
+            }
+            if (c == 146) {
+                this.reverse = false;
+                return;
+            }
+            if (c == 19) {
+                this.homeScreen();
+                return;
+            }
+            if (c == 20) {
+                this.delete(false);
+                return;
+            }
+            if (c == 148) {
+                this.insert();
+                return;
+            }
+            if (c == 147) {
+                this.clear();
+                return;
+            }
+            if (c < 32 || c >= 126)
+                return;
 
-        let petscii = this.ascii_to_petscii(c);
+            if (c == 96 || c == '|'.charCodeAt(0))
+                return;
+
+            petscii = this.ascii_to_petscii(c);
+        }
+
         if (this.reverse)
             petscii += 128;
         const i = petscii*8;
@@ -138,8 +150,7 @@ class CbmishConsole {
 
         if (++this.col >= this.cols) {
             this.col = 0;
-            if (++this.row >= this.rows)
-            {
+            if (++this.row >= this.rows) {
                 this.row = this.rows-1;
                 this.scrollScreen();
             }
@@ -149,8 +160,7 @@ class CbmishConsole {
     public newLine() {
         let wasBlinking = this.hideCursor();
         
-        if (++this.row >= this.rows)
-        {
+        if (++this.row >= this.rows) {
             this.row = this.rows-1;
             this.scrollScreen();
         }
@@ -558,7 +568,25 @@ class CbmishConsole {
         }, delayms);
     }
 
-    public chr$(value: number): string {
-        return String.fromCharCode(value);
+    public chr$(value: number): string|undefined {
+        if (value >= 0 && value <= 31)
+            return String.fromCharCode(value); // control codes        
+        if (value >= 128 && value <= 159)
+            return String.fromCharCode(value); // shift control codes
+        if (this.lowercase && value >= 'A'.charCodeAt(0) && value <= 'Z'.charCodeAt(0))
+            return String.fromCharCode(value - 'A'.charCodeAt(0) + 'a'.charCodeAt(0));
+        if (this.lowercase && value >= 'a'.charCodeAt(0) && value <= 'z'.charCodeAt(0))
+            return String.fromCharCode(value - 'a'.charCodeAt(0) + 'A'.charCodeAt(0));
+        if (value >= 32 && value <= 95)
+            return String.fromCharCode(value);
+        if (value >= 96 && value <= 127)
+            return String.fromCharCode(0xee00 + value - 32 + (this.lowercase ? 256 : 0));
+        if (value >= 160 && value <= 191)
+            return String.fromCharCode(0xee00 + value - 64 + (this.lowercase ? 256 : 0));
+        if (value >= 192 && value <= 254)
+            return String.fromCharCode(0xee00 + value - 128 + (this.lowercase ? 256 : 0));
+        if (value == 255)
+            return String.fromCharCode(0xee5e + (this.lowercase ? 256 : 0)); // pi special case
+        return undefined;   
     }
 }
