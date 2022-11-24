@@ -59,7 +59,6 @@ var CbmishConsole = /** @class */ (function () {
         this.canvas.addEventListener('mouseleave', function (event) { return _this.onmouseleavecanvas(event); }, false);
     };
     CbmishConsole.prototype.init = function () {
-        this.buttons = [];
         this.hideCursor();
         this.reverse = false;
         this.lowercase = true;
@@ -811,9 +810,13 @@ var CbmishConsole = /** @class */ (function () {
             this.buttons.splice(i, 1);
         }
     };
-    CbmishConsole.prototype.colorPicker = function () {
+    CbmishConsole.prototype.removeButtons = function () {
+        while (this.buttons.length > 0)
+            this.removeButton(this.buttons[0]);
+    };
+    CbmishConsole.prototype.colorPicker = function (showExit) {
+        if (showExit === void 0) { showExit = true; }
         var _cbm = this;
-        this.init();
         var saveRowCol = [this.row, this.col];
         var saveColor = this.fg;
         var setter = function (value) { };
@@ -903,19 +906,21 @@ var CbmishConsole = /** @class */ (function () {
         var setBorder = function (value) {
             _cbm.border(value);
         };
-        this.locate(37, 0);
-        var leave = this.addButton("X");
-        leave.onclick = function () {
-            setTimeout(function () {
-                eraseRadioButtons();
-                while (_cbm.buttons.length > 0)
-                    _cbm.removeButton(_cbm.buttons[0]);
-                for (var i = 0; i < _cbm.rows * _cbm.cols; ++i)
-                    _cbm.poke(13.5 * 4096 + i, _cbm.fg);
-                _cbm.row = saveRowCol[0], _cbm.col = saveRowCol[1];
-                _cbm.blinkCursor();
-            }, 250);
-        };
+        if (showExit) {
+            this.locate(37, 0);
+            var leave = this.addButton("X");
+            leave.onclick = function () {
+                setTimeout(function () {
+                    eraseRadioButtons();
+                    while (_cbm.buttons.length > 0)
+                        _cbm.removeButton(_cbm.buttons[0]);
+                    for (var i = 0; i < _cbm.rows * _cbm.cols; ++i)
+                        _cbm.poke(13.5 * 4096 + i, _cbm.fg);
+                    _cbm.row = saveRowCol[0], _cbm.col = saveRowCol[1];
+                    _cbm.blinkCursor();
+                }, 250);
+            };
+        }
         this.hideCursor();
     };
     return CbmishConsole;

@@ -65,7 +65,6 @@ class CbmishConsole {
     }
 
     public init() {
-        this.buttons = [];
         this.hideCursor();
         this.reverse = false;
         this.lowercase = true;
@@ -893,9 +892,13 @@ class CbmishConsole {
         }
     }
 
-    public colorPicker() {
+    public removeButtons() {        
+        while (this.buttons.length > 0)
+            this.removeButton(this.buttons[0]);
+    }
+
+    public colorPicker(showExit: boolean = true) {
         const _cbm = this;
-        this.init();
         let saveRowCol = [this.row, this.col];
         const saveColor = this.fg;
 
@@ -1003,19 +1006,21 @@ class CbmishConsole {
             _cbm.border(value);
         }
 
-        this.locate(37, 0);
-        const leave = this.addButton("X");
-        leave.onclick = () => { 
-            setTimeout( () => {
-                eraseRadioButtons();
-                while (_cbm.buttons.length > 0)
-                    _cbm.removeButton(_cbm.buttons[0]);
-                for (let i=0; i<_cbm.rows*_cbm.cols; ++i)
-                    _cbm.poke(13.5*4096+i, _cbm.fg);
-                [_cbm.row, _cbm.col] = saveRowCol;
-                _cbm.blinkCursor();
-            }, 250); 
-        };
+        if (showExit) {
+            this.locate(37, 0);
+            const leave = this.addButton("X");
+            leave.onclick = () => { 
+                setTimeout( () => {
+                    eraseRadioButtons();
+                    while (_cbm.buttons.length > 0)
+                        _cbm.removeButton(_cbm.buttons[0]);
+                    for (let i=0; i<_cbm.rows*_cbm.cols; ++i)
+                        _cbm.poke(13.5*4096+i, _cbm.fg);
+                    [_cbm.row, _cbm.col] = saveRowCol;
+                    _cbm.blinkCursor();
+                }, 250); 
+            };
+        }
 
         this.hideCursor();
     }
