@@ -38,14 +38,14 @@ var CbmishConsole = /** @class */ (function () {
             [32, 160, 32, 255],
             [64, 64, 192, 255],
             [255, 255, 128, 255],
-            [255, 128, 0, 255],
+            [240, 128, 0, 255],
             [128, 64, 0, 255],
-            [192, 32, 32, 255],
+            [255, 128, 128, 255],
             [64, 64, 64, 255],
             [128, 128, 128, 255],
             [160, 255, 160, 255],
             [96, 128, 240, 255],
-            [192, 192, 192, 255], // [15] lt gray
+            [192, 192, 192, 255],
         ];
     }
     CbmishConsole.prototype.CbmishConsole = function () {
@@ -420,7 +420,7 @@ var CbmishConsole = /** @class */ (function () {
     };
     CbmishConsole.prototype.background = function (bg) {
         var canvas = document.getElementsByTagName('canvas');
-        canvas[1].outerHTML = "<canvas class=\"background background".concat((bg & 0xF), "\"></canvas>");
+        canvas[1].outerHTML = "<canvas class=\"background background" + (bg & 0xF) + "\"></canvas>";
         this.bg = bg;
     };
     CbmishConsole.prototype.getBackground = function () {
@@ -428,7 +428,7 @@ var CbmishConsole = /** @class */ (function () {
     };
     CbmishConsole.prototype.border = function (color) {
         var canvas = document.getElementsByTagName('canvas');
-        canvas[0].outerHTML = "<canvas class=\"border border".concat((color & 0xF), "\"></canvas>");
+        canvas[0].outerHTML = "<canvas class=\"border border" + (color & 0xF) + "\"></canvas>";
         this.bd = color;
     };
     CbmishConsole.prototype.getBorder = function () {
@@ -785,7 +785,7 @@ var CbmishConsole = /** @class */ (function () {
                     button.onLeave();
             },
             "onclick": function () {
-                console.log("onClick: ".concat(button.text));
+                console.log("onClick: " + button.text);
             }
         };
         this.buttons.push(button);
