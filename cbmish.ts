@@ -5,35 +5,35 @@
 // davevw.com
 
 class CbmishConsole {
-    dirtyx = 0;
-    dirtyy = 0;
-    dirtywidth = 0;
-    dirtyheight = 0;
+    private dirtyx = 0;
+    private dirtyy = 0;
+    private dirtywidth = 0;
+    private dirtyheight = 0;
     fg = 14;
-    private _bg = 6;
-    private _bd = 14;
-    row = 0;
-    col = 0;
+    private bg = 6;
+    private bd = 14;
+    private row = 0;
+    private col = 0;
     lowercase: boolean = true;
     reverse: boolean = false;
-    cursorBlinking: boolean = false;
-    cursorShown: boolean = false;
-    cursorSaveColor: number;
-    cursorIntervalId: number | undefined;
-    repeatIntervalId: number | undefined;
-    escapePressed: boolean = false;
+    private cursorBlinking: boolean = false;
+    private cursorShown: boolean = false;
+    private cursorSaveColor: number;
+    private cursorIntervalId: number | undefined;
+    private repeatIntervalId: number | undefined;
+    private escapePressed: boolean = false;
 
-    canvas: any = document.getElementById("screen");
-    rows = Math.floor(this.canvas.getAttribute('height') / 8);
-    cols = Math.floor(this.canvas.getAttribute('width') / 8);   
-    ctx = this.canvas?.getContext("2d");
-    imgData = this.ctx.getImageData(0, 0, this.cols*8, this.rows*8);
-    bitmap = this.imgData.data;
+    private canvas: any = document.getElementById("screen");
+    private rows = Math.floor(this.canvas.getAttribute('height') / 8);
+    private cols = Math.floor(this.canvas.getAttribute('width') / 8);   
+    private ctx = this.canvas?.getContext("2d");
+    private imgData = this.ctx.getImageData(0, 0, this.cols*8, this.rows*8);
+    private bitmap = this.imgData.data;
 
-    charCells: number[] = [];
-    colorCells: number[] = [];
+    private charCells: number[] = [];
+    private colorCells: number[] = [];
 
-    buttons: any[] = [];
+    private buttons: any[] = [];
 
     palette: number[][] = [
         [0, 0, 0, 255],       // [0] black
@@ -489,21 +489,21 @@ class CbmishConsole {
     public background(bg: number) {
         const canvas = document.getElementsByTagName('canvas');
         canvas[1].outerHTML = `<canvas class="background background${(bg & 0xF)}"></canvas>`
-        this._bg = bg;
+        this.bg = bg;
     }
 
     public getBackground() {
-        return this._bg;
+        return this.bg;
     }
 
     public border(color: number) {
         const canvas = document.getElementsByTagName('canvas');
         canvas[0].outerHTML = `<canvas class="border border${(color & 0xF)}"></canvas>`
-        this._bd = color;
+        this.bd = color;
     }
 
     public getBorder() {
-        return this._bd;
+        return this.bd;
     }
 
     public hideCursor(): boolean {

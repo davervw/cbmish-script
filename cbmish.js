@@ -11,8 +11,8 @@ var CbmishConsole = /** @class */ (function () {
         this.dirtywidth = 0;
         this.dirtyheight = 0;
         this.fg = 14;
-        this._bg = 6;
-        this._bd = 14;
+        this.bg = 6;
+        this.bd = 14;
         this.row = 0;
         this.col = 0;
         this.lowercase = true;
@@ -418,18 +418,18 @@ var CbmishConsole = /** @class */ (function () {
     CbmishConsole.prototype.background = function (bg) {
         var canvas = document.getElementsByTagName('canvas');
         canvas[1].outerHTML = "<canvas class=\"background background" + (bg & 0xF) + "\"></canvas>";
-        this._bg = bg;
+        this.bg = bg;
     };
     CbmishConsole.prototype.getBackground = function () {
-        return this._bg;
+        return this.bg;
     };
     CbmishConsole.prototype.border = function (color) {
         var canvas = document.getElementsByTagName('canvas');
         canvas[0].outerHTML = "<canvas class=\"border border" + (color & 0xF) + "\"></canvas>";
-        this._bd = color;
+        this.bd = color;
     };
     CbmishConsole.prototype.getBorder = function () {
-        return this._bd;
+        return this.bd;
     };
     CbmishConsole.prototype.hideCursor = function () {
         var wasBlinking = this.cursorBlinking;
