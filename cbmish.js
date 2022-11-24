@@ -42,7 +42,7 @@ var CbmishConsole = /** @class */ (function () {
             [128, 128, 128, 255],
             [160, 255, 160, 255],
             [96, 128, 240, 255],
-            [192, 192, 192, 255], // [15] lt gray
+            [192, 192, 192, 255],
         ];
     }
     CbmishConsole.prototype.CbmishConsole = function () {
@@ -54,6 +54,7 @@ var CbmishConsole = /** @class */ (function () {
     };
     CbmishConsole.prototype.init = function () {
         this.hideCursor();
+        this.reverse = false;
         this.lowercase = true;
         this.border(14);
         this.background(6);
@@ -393,11 +394,11 @@ var CbmishConsole = /** @class */ (function () {
     };
     CbmishConsole.prototype.background = function (bg) {
         var canvas = document.getElementsByTagName('canvas');
-        canvas[1].outerHTML = "<canvas class=\"background background".concat((bg & 0xF), "\"></canvas>");
+        canvas[1].outerHTML = "<canvas class=\"background background" + (bg & 0xF) + "\"></canvas>";
     };
     CbmishConsole.prototype.border = function (color) {
         var canvas = document.getElementsByTagName('canvas');
-        canvas[0].outerHTML = "<canvas class=\"border border".concat((color & 0xF), "\"></canvas>");
+        canvas[0].outerHTML = "<canvas class=\"border border" + (color & 0xF) + "\"></canvas>";
     };
     CbmishConsole.prototype.hideCursor = function () {
         var wasBlinking = this.cursorBlinking;
@@ -532,6 +533,81 @@ var CbmishConsole = /** @class */ (function () {
         if (value == 255)
             return String.fromCharCode(0xee5e + (this.lowercase ? 256 : 0)); // pi special case
         return undefined;
+    };
+    CbmishConsole.prototype.locate = function (x, y) {
+        if (x < 0 || x >= this.cols || y < 0 || y >= this.rows)
+            throw "invalid position";
+        var wasBlinking = this.hideCursor();
+        this.col = x;
+        this.row = y;
+        if (wasBlinking)
+            this.blinkCursor();
+    };
+    CbmishConsole.prototype.petsciiPokesChart = function () {
+        cbm.reverse = false;
+        for (var row = 0; row < 16; ++row) {
+            for (var col = 0; col < 16; ++col) {
+                cbm.poke(1024 + col + (row + 8) * 40 + 4, col + row * 16);
+                cbm.poke(1024 + col + (row + 8) * 40 + 21, col + row * 16 + 256);
+            }
+        }
+        for (var i = 7 * 40; i < 1000; ++i)
+            cbm.poke(13.5 * 4096 + i, 1);
+        cbm.foreground(14);
+        for (var i = 0; i < 16; ++i) {
+            cbm.locate(3, 8 + i);
+            if (i < 10)
+                cbm.out(i);
+            else
+                cbm.out(String.fromCharCode(65 + i - 10));
+        }
+        cbm.out('\r');
+        cbm.right();
+        cbm.right();
+        cbm.right();
+        cbm.right();
+        cbm.out('0123456789ABCDEF 0123456789ABCDEF');
+    };
+    CbmishConsole.prototype.petsciiChr$Chart = function () {
+        for (var row = 0; row < 16; ++row) {
+            for (var col = 0; col < 16; ++col) {
+                var i = row * 16 + col;
+                cbm.lowercase = false;
+                cbm.locate(col + 4, row + 8);
+                if ((i & 127) > 32)
+                    cbm.out(cbm.chr$(i));
+                else
+                    cbm.out(' ');
+                cbm.lowercase = true;
+                cbm.locate(col + 21, row + 8);
+                if ((i & 127) > 32)
+                    cbm.out(cbm.chr$(i));
+                else
+                    cbm.out(' ');
+            }
+        }
+        for (var i = 7 * 40; i < 1000; ++i)
+            cbm.poke(13.5 * 4096 + i, 1);
+        cbm.foreground(14);
+        for (var i = 0; i < 16; ++i) {
+            cbm.locate(3, 8 + i);
+            if (i < 10)
+                cbm.out(i);
+            else
+                cbm.out(String.fromCharCode(65 + i - 10));
+        }
+        cbm.out('\r');
+        cbm.right();
+        cbm.right();
+        cbm.right();
+        cbm.right();
+        cbm.out('0123456789ABCDEF 0123456789ABCDEF');
+    };
+    CbmishConsole.prototype.maze = function () {
+        cbm.lowercase = false;
+        cbm.newLine();
+        cbm.up();
+        cbm.repeat(function () { return cbm.out(cbm.chr$(109.5 + Math.random())); }, cbm.cols * cbm.rows - 1, 0);
     };
     return CbmishConsole;
 }());

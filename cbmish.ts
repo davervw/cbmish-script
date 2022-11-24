@@ -59,6 +59,7 @@ class CbmishConsole {
 
     public init() {
         this.hideCursor();
+        this.reverse = false;
         this.lowercase = true;
         this.border(14);
         this.background(6);
@@ -599,5 +600,86 @@ class CbmishConsole {
         if (value == 255)
             return String.fromCharCode(0xee5e + (this.lowercase ? 256 : 0)); // pi special case
         return undefined;   
+    }
+
+    public locate(x: number, y: number) {
+        if (x < 0 || x >= this.cols || y < 0 || y >= this.rows)
+            throw "invalid position";
+        const wasBlinking = this.hideCursor();
+        this.col = x;
+        this.row = y;
+        if (wasBlinking)
+            this.blinkCursor();
+    }
+
+    public petsciiPokesChart() {
+        cbm.reverse=false;
+        for (let row = 0; row < 16; ++row) {
+            for (let col = 0; col < 16; ++col) {
+                cbm.poke(1024 + col + (row + 8) * 40 + 4, col + row * 16);
+                cbm.poke(1024 + col + (row + 8) * 40 + 21, col + row * 16 + 256);
+            }
+        }
+        for (let i = 7 * 40; i < 1000; ++i)
+            cbm.poke(13.5 * 4096 + i, 1);
+
+        cbm.foreground(14);
+        for (let i = 0; i < 16; ++i) {
+            cbm.locate(3, 8 + i);
+            if (i < 10)
+                cbm.out(i);
+            else
+                cbm.out(String.fromCharCode(65 + i - 10));
+        }
+        cbm.out('\r');
+        cbm.right();
+        cbm.right();
+        cbm.right();
+        cbm.right();
+        cbm.out('0123456789ABCDEF 0123456789ABCDEF');
+    }
+
+    public petsciiChr$Chart() {
+        for (let row = 0; row < 16; ++row) {
+            for (let col = 0; col < 16; ++col) {
+                let i = row * 16 + col;
+                cbm.lowercase = false;
+                cbm.locate(col + 4, row + 8);
+                if ((i & 127) > 32)
+                    cbm.out(cbm.chr$(i));
+                else
+                    cbm.out(' ');
+                cbm.lowercase = true;
+                cbm.locate(col + 21, row + 8);
+                if ((i & 127) > 32)
+                    cbm.out(cbm.chr$(i));
+                else
+                    cbm.out(' ');
+            }
+        }
+        for (let i = 7 * 40; i < 1000; ++i)
+            cbm.poke(13.5 * 4096 + i, 1);
+
+        cbm.foreground(14);
+        for (let i = 0; i < 16; ++i) {
+            cbm.locate(3, 8 + i);
+            if (i < 10)
+                cbm.out(i);
+            else
+                cbm.out(String.fromCharCode(65 + i - 10));
+        }
+        cbm.out('\r');
+        cbm.right();
+        cbm.right();
+        cbm.right();
+        cbm.right();
+        cbm.out('0123456789ABCDEF 0123456789ABCDEF');
+    }
+
+    public maze() {
+        cbm.lowercase = false;
+        cbm.newLine();
+        cbm.up();
+        cbm.repeat(() => cbm.out(cbm.chr$(109.5+Math.random())), cbm.cols*cbm.rows-1, 0);    
     }
 }
