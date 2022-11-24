@@ -11,6 +11,8 @@ var CbmishConsole = /** @class */ (function () {
         this.dirtywidth = 0;
         this.dirtyheight = 0;
         this.fg = 14;
+        this._bg = 6;
+        this._bd = 14;
         this.row = 0;
         this.col = 0;
         this.lowercase = true;
@@ -26,6 +28,7 @@ var CbmishConsole = /** @class */ (function () {
         this.bitmap = this.imgData.data;
         this.charCells = [];
         this.colorCells = [];
+        this.buttons = [];
         this.palette = [
             [0, 0, 0, 255],
             [255, 255, 255, 255],
@@ -51,8 +54,12 @@ var CbmishConsole = /** @class */ (function () {
         window.addEventListener('keypress', function (event) { _this.keypress(event); });
         window.addEventListener('keydown', function (event) { _this.keydown(event.key, event.shiftKey, event.ctrlKey, event.altKey); });
         window.addEventListener('keyup', function (event) { _this.keyup(event.key, event.shiftKey, event.ctrlKey, event.altKey); });
+        this.canvas.addEventListener('click', function (event) { return _this.onclickcanvas(event); }, false);
+        this.canvas.addEventListener('mousemove', function (event) { return _this.onmousemovecanvas(event); }, false);
+        this.canvas.addEventListener('mouseleave', function (event) { return _this.onmouseleavecanvas(event); }, false);
     };
     CbmishConsole.prototype.init = function () {
+        this.buttons = [];
         this.hideCursor();
         this.reverse = false;
         this.lowercase = true;
@@ -108,6 +115,22 @@ var CbmishConsole = /** @class */ (function () {
             }
             if (c == 19) {
                 this.homeScreen();
+                return;
+            }
+            if (c == 29) {
+                this.right();
+                return;
+            }
+            if (c == 157) {
+                this.left();
+                return;
+            }
+            if (c == 17) {
+                this.down();
+                return;
+            }
+            if (c == 145) {
+                this.up();
                 return;
             }
             if (c == 20) {
@@ -395,10 +418,18 @@ var CbmishConsole = /** @class */ (function () {
     CbmishConsole.prototype.background = function (bg) {
         var canvas = document.getElementsByTagName('canvas');
         canvas[1].outerHTML = "<canvas class=\"background background" + (bg & 0xF) + "\"></canvas>";
+        this._bg = bg;
+    };
+    CbmishConsole.prototype.getBackground = function () {
+        return this._bg;
     };
     CbmishConsole.prototype.border = function (color) {
         var canvas = document.getElementsByTagName('canvas');
         canvas[0].outerHTML = "<canvas class=\"border border" + (color & 0xF) + "\"></canvas>";
+        this._bd = color;
+    };
+    CbmishConsole.prototype.getBorder = function () {
+        return this._bd;
     };
     CbmishConsole.prototype.hideCursor = function () {
         var wasBlinking = this.cursorBlinking;
@@ -535,6 +566,8 @@ var CbmishConsole = /** @class */ (function () {
         return undefined;
     };
     CbmishConsole.prototype.locate = function (x, y) {
+        var oldx = this.row;
+        var oldy = this.col;
         if (x < 0 || x >= this.cols || y < 0 || y >= this.rows)
             throw "invalid position";
         var wasBlinking = this.hideCursor();
@@ -542,72 +575,346 @@ var CbmishConsole = /** @class */ (function () {
         this.row = y;
         if (wasBlinking)
             this.blinkCursor();
+        return [oldx, oldy];
     };
     CbmishConsole.prototype.petsciiPokesChart = function () {
-        cbm.reverse = false;
+        this.reverse = false;
         for (var row = 0; row < 16; ++row) {
             for (var col = 0; col < 16; ++col) {
-                cbm.poke(1024 + col + (row + 8) * 40 + 4, col + row * 16);
-                cbm.poke(1024 + col + (row + 8) * 40 + 21, col + row * 16 + 256);
+                this.poke(1024 + col + (row + 8) * 40 + 4, col + row * 16);
+                this.poke(1024 + col + (row + 8) * 40 + 21, col + row * 16 + 256);
             }
         }
         for (var i = 7 * 40; i < 1000; ++i)
-            cbm.poke(13.5 * 4096 + i, 1);
-        cbm.foreground(14);
+            this.poke(13.5 * 4096 + i, 1);
+        this.foreground(14);
         for (var i = 0; i < 16; ++i) {
-            cbm.locate(3, 8 + i);
+            this.locate(3, 8 + i);
             if (i < 10)
-                cbm.out(i);
+                this.out(i);
             else
-                cbm.out(String.fromCharCode(65 + i - 10));
+                this.out(String.fromCharCode(65 + i - 10));
         }
-        cbm.out('\r');
-        cbm.right();
-        cbm.right();
-        cbm.right();
-        cbm.right();
-        cbm.out('0123456789ABCDEF 0123456789ABCDEF');
+        this.out('\r');
+        this.right();
+        this.right();
+        this.right();
+        this.right();
+        this.out('0123456789ABCDEF 0123456789ABCDEF');
     };
     CbmishConsole.prototype.petsciiChr$Chart = function () {
         for (var row = 0; row < 16; ++row) {
             for (var col = 0; col < 16; ++col) {
                 var i = row * 16 + col;
-                cbm.lowercase = false;
-                cbm.locate(col + 4, row + 8);
+                this.lowercase = false;
+                this.locate(col + 4, row + 8);
                 if ((i & 127) > 32)
-                    cbm.out(cbm.chr$(i));
+                    this.out(this.chr$(i));
                 else
-                    cbm.out(' ');
-                cbm.lowercase = true;
-                cbm.locate(col + 21, row + 8);
+                    this.out(' ');
+                this.lowercase = true;
+                this.locate(col + 21, row + 8);
                 if ((i & 127) > 32)
-                    cbm.out(cbm.chr$(i));
+                    this.out(this.chr$(i));
                 else
-                    cbm.out(' ');
+                    this.out(' ');
             }
         }
         for (var i = 7 * 40; i < 1000; ++i)
-            cbm.poke(13.5 * 4096 + i, 1);
-        cbm.foreground(14);
+            this.poke(13.5 * 4096 + i, 1);
+        this.foreground(14);
         for (var i = 0; i < 16; ++i) {
-            cbm.locate(3, 8 + i);
+            this.locate(3, 8 + i);
             if (i < 10)
-                cbm.out(i);
+                this.out(i);
             else
-                cbm.out(String.fromCharCode(65 + i - 10));
+                this.out(String.fromCharCode(65 + i - 10));
         }
-        cbm.out('\r');
-        cbm.right();
-        cbm.right();
-        cbm.right();
-        cbm.right();
-        cbm.out('0123456789ABCDEF 0123456789ABCDEF');
+        this.out('\r');
+        this.right();
+        this.right();
+        this.right();
+        this.right();
+        this.out('0123456789ABCDEF 0123456789ABCDEF');
     };
-    CbmishConsole.prototype.maze = function () {
-        cbm.lowercase = false;
-        cbm.newLine();
-        cbm.up();
-        cbm.repeat(function () { return cbm.out(cbm.chr$(109.5 + Math.random())); }, cbm.cols * cbm.rows - 1, 0);
+    CbmishConsole.prototype.maze = function (rows) {
+        var _this = this;
+        if (rows === void 0) { rows = this.rows; }
+        this.lowercase = false;
+        this.newLine();
+        this.up();
+        this.repeat(function () { return _this.out(_this.chr$(109.5 + Math.random())); }, this.cols * rows - 1, 0);
+    };
+    CbmishConsole.prototype.onclickcanvas = function (event) {
+        var x = Math.floor(event.offsetX / 8);
+        var y = Math.floor(event.offsetY / 8);
+        //console.log(`click ${x},${y}`)
+        for (var _i = 0, _a = this.buttons; _i < _a.length; _i++) {
+            var button = _a[_i];
+            button.checkClick(x, y);
+        }
+        event.preventDefault();
+    };
+    CbmishConsole.prototype.onmousemovecanvas = function (event) {
+        var x = Math.floor(event.offsetX / 8);
+        var y = Math.floor(event.offsetY / 8);
+        //console.log(`mousemove ${x},${y}`)
+        for (var _i = 0, _a = this.buttons; _i < _a.length; _i++) {
+            var button = _a[_i];
+            button.checkMove(x, y);
+        }
+    };
+    CbmishConsole.prototype.onmouseleavecanvas = function (event) {
+        var x = Math.floor(event.offsetX / 8);
+        var y = Math.floor(event.offsetY / 8);
+        //console.log(`mouseleave ${x},${y}`)
+        for (var _i = 0, _a = this.buttons; _i < _a.length; _i++) {
+            var button = _a[_i];
+            button.checkLeave();
+        }
+    };
+    CbmishConsole.prototype.addButton = function (text, context) {
+        var _this = this;
+        if (context === void 0) { context = undefined; }
+        this.lowercase = false;
+        var normal = '\x8E' + this.chr$(0x75);
+        for (var i = 1; i <= text.length; ++i)
+            normal += this.chr$(0x60);
+        normal += this.chr$(0x69) + '\x11';
+        for (var i = 1; i <= text.length + 2; ++i)
+            normal += '\x9D';
+        normal += this.chr$(0x62) + '\x0E' + text + '\x8E' + this.chr$(0x62) + '\x11';
+        for (var i = 1; i <= text.length + 2; ++i)
+            normal += '\x9D';
+        normal += '\x8E' + this.chr$(0x6A);
+        for (var i = 1; i <= text.length; ++i)
+            normal += this.chr$(0x60);
+        normal += this.chr$(0x6B) + '\x91\x91';
+        for (var i = 1; i <= text.length + 2; ++i)
+            normal += '\x9D';
+        var hover = '\x8E' + this.chr$(0xEC);
+        for (var i = 1; i <= text.length; ++i)
+            hover += this.chr$(0xA2);
+        hover += this.chr$(0xFB) + '\x11';
+        for (var i = 1; i <= text.length + 2; ++i)
+            hover += '\x9D';
+        hover += '\x12' + this.chr$(0xA1) + '\x0E' + text + '\x8E\x92' + this.chr$(0xA1) + '\x11';
+        for (var i = 1; i <= text.length + 2; ++i)
+            hover += '\x9D';
+        hover += '\x8E' + this.chr$(0xFC) + '\x12';
+        for (var i = 1; i <= text.length; ++i)
+            hover += this.chr$(0xA2);
+        hover += '\x92' + this.chr$(0xBE) + '\x91\x91';
+        for (var i = 1; i <= text.length + 2; ++i)
+            hover += '\x9D';
+        this.out(normal);
+        var _cbm = this;
+        var button = {
+            "text": text,
+            "context": context,
+            "color": this.fg,
+            "hovered": false,
+            "normal": normal,
+            "hover": hover,
+            "top": this.row,
+            "left": this.col,
+            "bottom": this.row + 3,
+            "right": this.col + text.length + 2,
+            "checkBounds": function (x, y) {
+                return (x >= button.left && x < button.right && y >= button.top && y < button.bottom);
+            },
+            "onHover": function () {
+                var wasBlinking = _cbm.hideCursor();
+                button.hovered = true;
+                var saveColor = _this.fg;
+                _this.fg = button.color;
+                var oldRowCol = _cbm.locate(button.left, button.top);
+                _cbm.out(hover);
+                _this.fg = saveColor;
+                _this.row = oldRowCol[0], _this.col = oldRowCol[1];
+                if (wasBlinking)
+                    _cbm.blinkCursor();
+            },
+            "onLeave": function () {
+                var wasBlinking = _cbm.hideCursor();
+                button.hovered = false;
+                var saveColor = _this.fg;
+                _this.fg = button.color;
+                var oldRowCol = _cbm.locate(button.left, button.top);
+                _cbm.out(normal);
+                _this.fg = saveColor;
+                _this.row = oldRowCol[0], _this.col = oldRowCol[1];
+                if (wasBlinking)
+                    _cbm.blinkCursor();
+            },
+            "checkClick": function (x, y) {
+                if (button.checkBounds(x, y)) {
+                    var wasBlinking = _cbm.hideCursor();
+                    var saveColor = _this.fg;
+                    _this.fg = button.color;
+                    var oldRowCol = _cbm.locate(button.left, button.top);
+                    _cbm.out(normal);
+                    _this.fg = saveColor;
+                    if (button.onclick != null)
+                        button.onclick();
+                    _this.row = oldRowCol[0], _this.col = oldRowCol[1];
+                    if (wasBlinking)
+                        _cbm.blinkCursor();
+                    setTimeout(function () { return button.onHover(); }, 50);
+                }
+            },
+            "checkMove": function (x, y) {
+                if (button.hovered) {
+                    if (!button.checkBounds(x, y))
+                        button.onLeave();
+                }
+                else {
+                    if (button.checkBounds(x, y))
+                        button.onHover();
+                }
+            },
+            "checkLeave": function () {
+                if (button.hovered)
+                    button.onLeave();
+            },
+            "onclick": function () {
+                console.log("onClick: " + button.text);
+            }
+        };
+        this.buttons.push(button);
+        return button;
+    };
+    CbmishConsole.prototype.findButton = function (text) {
+        var i = 0;
+        while (i < this.buttons.length && this.buttons[i].text !== text)
+            ++i;
+        if (i < this.buttons.length)
+            return this.buttons[i];
+        return undefined;
+    };
+    CbmishConsole.prototype.removeButton = function (button) {
+        var i = 0;
+        while (i < this.buttons.length && this.buttons[i] !== button)
+            ++i;
+        if (i < this.buttons.length) {
+            // remove from screen
+            var saveColor = this.fg;
+            this.fg = button.fg;
+            for (var y = button.top; y < button.bottom; ++y) {
+                for (var x = button.left; x < button.right; ++x) {
+                    var offset = x + y * this.cols;
+                    this.pokeScreen(1024 + offset, 32);
+                }
+            }
+            this.fg = saveColor;
+            // remove from collection
+            this.buttons.splice(i, 1);
+        }
+    };
+    CbmishConsole.prototype.colorPicker = function () {
+        var _cbm = this;
+        this.init();
+        var saveRowCol = [this.row, this.col];
+        var saveColor = this.fg;
+        var setter = function (value) { };
+        var colorFn = function (value) {
+            setter(value);
+            redrawRadioButtons();
+        };
+        for (var i = 0; i < 2; ++i) {
+            var _loop_1 = function (j) {
+                var color = i * 8 + j;
+                var x = j * 5;
+                var y = i * 3 + 8;
+                this_1.foreground(color);
+                this_1.locate(x, y);
+                var button = this_1.addButton(color.toString());
+                button.onclick = function () { colorFn(color); };
+            };
+            var this_1 = this;
+            for (var j = 0; j < 8; ++j) {
+                _loop_1(j);
+            }
+        }
+        this.fg = saveColor;
+        this.locate(3, 15);
+        var fore = this.addButton("Foreground");
+        fore.onclick = function () {
+            setter = setForeground;
+            redrawRadioButtons();
+        };
+        this.locate(3, 18);
+        var back = this.addButton("Background");
+        back.onclick = function () {
+            setter = setBackground;
+            redrawRadioButtons();
+        };
+        this.locate(3, 21);
+        var bord = this.addButton("  Border  ");
+        bord.onclick = function () {
+            setter = setBorder;
+            redrawRadioButtons();
+        };
+        var redrawRadioButtons = function () {
+            _cbm.lowercase = false;
+            _cbm.locate(1, fore.top + 1);
+            _cbm.out(_cbm.chr$((setter === setForeground) ? 0x71 : 0x77));
+            _cbm.locate(fore.right + 1, fore.top + 1);
+            _cbm.out(fore.color + ' ');
+            _cbm.locate(1, back.top + 1);
+            _cbm.out(_cbm.chr$((setter === setBackground) ? 0x71 : 0x77));
+            _cbm.locate(back.right + 1, back.top + 1);
+            _cbm.out(_cbm.getBackground() + ' ');
+            _cbm.locate(1, bord.top + 1);
+            _cbm.out(_cbm.chr$((setter === setBorder) ? 0x71 : 0x77));
+            _cbm.locate(bord.right + 1, bord.top + 1);
+            _cbm.out(_cbm.getBorder() + ' ');
+        };
+        var eraseRadioButtons = function () {
+            _cbm.locate(1, fore.top + 1);
+            _cbm.out(' ');
+            _cbm.locate(fore.right + 1, fore.top + 1);
+            _cbm.out('  ');
+            _cbm.locate(1, back.top + 1);
+            _cbm.out(' ');
+            _cbm.locate(back.right + 1, back.top + 1);
+            _cbm.out('  ');
+            _cbm.locate(1, bord.top + 1);
+            _cbm.out(' ');
+            _cbm.locate(bord.right + 1, bord.top + 1);
+            _cbm.out('  ');
+        };
+        redrawRadioButtons();
+        var setForeground = function (value) {
+            _cbm.foreground(value);
+            fore.color = value;
+            _cbm.locate(fore.left, fore.top);
+            _cbm.out(fore.normal);
+            back.color = value;
+            _cbm.locate(back.left, back.top);
+            _cbm.out(back.normal);
+            bord.color = value;
+            _cbm.locate(bord.left, bord.top);
+            _cbm.out(bord.normal);
+        };
+        var setBackground = function (value) {
+            _cbm.background(value);
+        };
+        var setBorder = function (value) {
+            _cbm.border(value);
+        };
+        this.locate(37, 0);
+        var leave = this.addButton("X");
+        leave.onclick = function () {
+            setTimeout(function () {
+                eraseRadioButtons();
+                while (_cbm.buttons.length > 0)
+                    _cbm.removeButton(_cbm.buttons[0]);
+                _cbm.row = saveRowCol[0], _cbm.col = saveRowCol[1];
+                _cbm.blinkCursor();
+            }, 250);
+        };
+        this.hideCursor();
     };
     return CbmishConsole;
 }());

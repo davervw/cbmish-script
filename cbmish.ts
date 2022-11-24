@@ -10,6 +10,8 @@ class CbmishConsole {
     dirtywidth = 0;
     dirtyheight = 0;
     fg = 14;
+    private _bg = 6;
+    private _bd = 14;
     row = 0;
     col = 0;
     lowercase: boolean = true;
@@ -30,6 +32,8 @@ class CbmishConsole {
 
     charCells: number[] = [];
     colorCells: number[] = [];
+
+    buttons: any[] = [];
 
     palette: number[][] = [
         [0, 0, 0, 255],       // [0] black
@@ -55,9 +59,13 @@ class CbmishConsole {
         window.addEventListener('keypress', (event: KeyboardEvent) => { this.keypress(event); });
         window.addEventListener('keydown', (event: KeyboardEvent) => { this.keydown(event.key, event.shiftKey, event.ctrlKey, event.altKey); });
         window.addEventListener('keyup', (event: KeyboardEvent) => { this.keyup(event.key, event.shiftKey, event.ctrlKey, event.altKey); });
+        this.canvas.addEventListener('click', (event: MouseEvent) => this.onclickcanvas(event), false);
+        this.canvas.addEventListener('mousemove', (event: MouseEvent) => this.onmousemovecanvas(event), false);
+        this.canvas.addEventListener('mouseleave', (event: MouseEvent) => this.onmouseleavecanvas(event), false);
     }
 
     public init() {
+        this.buttons = [];
         this.hideCursor();
         this.reverse = false;
         this.lowercase = true;
@@ -118,6 +126,22 @@ class CbmishConsole {
             }
             if (c == 19) {
                 this.homeScreen();
+                return;
+            }
+            if (c == 29) {
+                this.right();
+                return;
+            }
+            if (c == 157) {
+                this.left();
+                return;
+            }           
+            if (c == 17) {
+                this.down();
+                return;
+            }
+            if (c == 145) {
+                this.up();
                 return;
             }
             if (c == 20) {
@@ -465,11 +489,21 @@ class CbmishConsole {
     public background(bg: number) {
         const canvas = document.getElementsByTagName('canvas');
         canvas[1].outerHTML = `<canvas class="background background${(bg & 0xF)}"></canvas>`
+        this._bg = bg;
+    }
+
+    public getBackground() {
+        return this._bg;
     }
 
     public border(color: number) {
         const canvas = document.getElementsByTagName('canvas');
         canvas[0].outerHTML = `<canvas class="border border${(color & 0xF)}"></canvas>`
+        this._bd = color;
+    }
+
+    public getBorder() {
+        return this._bd;
     }
 
     public hideCursor(): boolean {
@@ -502,13 +536,13 @@ class CbmishConsole {
         this.pokeScreen(1024 + offset, this.charCells[offset] ^ 128);
     }
 
-    public keypress(event: KeyboardEvent) {
+    private keypress(event: KeyboardEvent) {
         const key = event.key;
         if (key.length == 1)
             this.out(key);
     }
 
-    public keydown(key: string, shiftKey: boolean, ctrlKey: boolean, altKey: boolean) {
+    private keydown(key: string, shiftKey: boolean, ctrlKey: boolean, altKey: boolean) {
         if (key == 'Home' && !altKey) {
             if (shiftKey && !ctrlKey)
                 this.clear()
@@ -555,7 +589,7 @@ class CbmishConsole {
             this.init();
     }
 
-    public keyup(key: string, shiftKey: boolean, ctrlKey: boolean, altKey: boolean) {
+    private keyup(key: string, shiftKey: boolean, ctrlKey: boolean, altKey: boolean) {
         if (key == 'Escape' && !shiftKey && !ctrlKey && !altKey)
             this.escapePressed = false;
     }
@@ -602,7 +636,9 @@ class CbmishConsole {
         return undefined;   
     }
 
-    public locate(x: number, y: number) {
+    public locate(x: number, y: number): [number, number] {
+        const oldx = this.row;
+        const oldy = this.col;
         if (x < 0 || x >= this.cols || y < 0 || y >= this.rows)
             throw "invalid position";
         const wasBlinking = this.hideCursor();
@@ -610,76 +646,375 @@ class CbmishConsole {
         this.row = y;
         if (wasBlinking)
             this.blinkCursor();
+        return [oldx, oldy];
     }
 
     public petsciiPokesChart() {
-        cbm.reverse=false;
+        this.reverse=false;
         for (let row = 0; row < 16; ++row) {
             for (let col = 0; col < 16; ++col) {
-                cbm.poke(1024 + col + (row + 8) * 40 + 4, col + row * 16);
-                cbm.poke(1024 + col + (row + 8) * 40 + 21, col + row * 16 + 256);
+                this.poke(1024 + col + (row + 8) * 40 + 4, col + row * 16);
+                this.poke(1024 + col + (row + 8) * 40 + 21, col + row * 16 + 256);
             }
         }
         for (let i = 7 * 40; i < 1000; ++i)
-            cbm.poke(13.5 * 4096 + i, 1);
+            this.poke(13.5 * 4096 + i, 1);
 
-        cbm.foreground(14);
+        this.foreground(14);
         for (let i = 0; i < 16; ++i) {
-            cbm.locate(3, 8 + i);
+            this.locate(3, 8 + i);
             if (i < 10)
-                cbm.out(i);
+                this.out(i);
             else
-                cbm.out(String.fromCharCode(65 + i - 10));
+                this.out(String.fromCharCode(65 + i - 10));
         }
-        cbm.out('\r');
-        cbm.right();
-        cbm.right();
-        cbm.right();
-        cbm.right();
-        cbm.out('0123456789ABCDEF 0123456789ABCDEF');
+        this.out('\r');
+        this.right();
+        this.right();
+        this.right();
+        this.right();
+        this.out('0123456789ABCDEF 0123456789ABCDEF');
     }
 
     public petsciiChr$Chart() {
         for (let row = 0; row < 16; ++row) {
             for (let col = 0; col < 16; ++col) {
                 let i = row * 16 + col;
-                cbm.lowercase = false;
-                cbm.locate(col + 4, row + 8);
+                this.lowercase = false;
+                this.locate(col + 4, row + 8);
                 if ((i & 127) > 32)
-                    cbm.out(cbm.chr$(i));
+                    this.out(this.chr$(i));
                 else
-                    cbm.out(' ');
-                cbm.lowercase = true;
-                cbm.locate(col + 21, row + 8);
+                    this.out(' ');
+                this.lowercase = true;
+                this.locate(col + 21, row + 8);
                 if ((i & 127) > 32)
-                    cbm.out(cbm.chr$(i));
+                    this.out(this.chr$(i));
                 else
-                    cbm.out(' ');
+                    this.out(' ');
             }
         }
         for (let i = 7 * 40; i < 1000; ++i)
-            cbm.poke(13.5 * 4096 + i, 1);
+            this.poke(13.5 * 4096 + i, 1);
 
-        cbm.foreground(14);
+        this.foreground(14);
         for (let i = 0; i < 16; ++i) {
-            cbm.locate(3, 8 + i);
+            this.locate(3, 8 + i);
             if (i < 10)
-                cbm.out(i);
+                this.out(i);
             else
-                cbm.out(String.fromCharCode(65 + i - 10));
+                this.out(String.fromCharCode(65 + i - 10));
         }
-        cbm.out('\r');
-        cbm.right();
-        cbm.right();
-        cbm.right();
-        cbm.right();
-        cbm.out('0123456789ABCDEF 0123456789ABCDEF');
+        this.out('\r');
+        this.right();
+        this.right();
+        this.right();
+        this.right();
+        this.out('0123456789ABCDEF 0123456789ABCDEF');
     }
 
-    public maze() {
-        cbm.lowercase = false;
-        cbm.newLine();
-        cbm.up();
-        cbm.repeat(() => cbm.out(cbm.chr$(109.5+Math.random())), cbm.cols*cbm.rows-1, 0);    
+    public maze(rows: number = this.rows) {
+        this.lowercase = false;
+        this.newLine();
+        this.up();
+        this.repeat(() => this.out(this.chr$(109.5+Math.random())), this.cols*rows-1, 0);    
+    }
+
+    onclickcanvas(event: MouseEvent) {
+        const x = Math.floor(event.offsetX / 8);
+        const y = Math.floor(event.offsetY / 8);
+        //console.log(`click ${x},${y}`)
+        for (let button of this.buttons)
+            button.checkClick(x, y);
+        event.preventDefault();
+    }
+
+    onmousemovecanvas(event: MouseEvent) {
+        const x = Math.floor(event.offsetX / 8);
+        const y = Math.floor(event.offsetY / 8);
+        //console.log(`mousemove ${x},${y}`)
+        for (let button of this.buttons)
+            button.checkMove(x, y);
+    }
+
+    onmouseleavecanvas(event: MouseEvent) {
+        const x = Math.floor(event.offsetX / 8);
+        const y = Math.floor(event.offsetY / 8);
+        //console.log(`mouseleave ${x},${y}`)
+        for (let button of this.buttons)
+            button.checkLeave();
+    }
+
+    public addButton(text: string, context: any = undefined): any {
+        this.lowercase = false;
+
+        let normal = '\x8E' + this.chr$(0x75);
+        for (let i=1; i<=text.length; ++i)
+            normal += this.chr$(0x60);
+        normal += this.chr$(0x69)+'\x11';
+        for (let i=1; i<=text.length+2; ++i)
+            normal += '\x9D';
+        normal += this.chr$(0x62)+'\x0E'+text+'\x8E'+this.chr$(0x62)+'\x11';
+        for (let i=1; i<=text.length+2; ++i)
+            normal += '\x9D';
+        normal += '\x8E' + this.chr$(0x6A);
+        for (let i=1; i<=text.length; ++i)
+            normal += this.chr$(0x60);
+        normal += this.chr$(0x6B)+'\x91\x91';
+        for (let i=1; i<=text.length+2; ++i)
+            normal += '\x9D';
+
+        let hover = '\x8E' + this.chr$(0xEC);
+        for (let i=1; i<=text.length; ++i)
+            hover += this.chr$(0xA2);
+        hover += this.chr$(0xFB)+'\x11';
+        for (let i=1; i<=text.length+2; ++i)
+            hover += '\x9D';
+        hover += '\x12'+this.chr$(0xA1)+'\x0E'+text+'\x8E\x92'+this.chr$(0xA1)+'\x11';
+        for (let i=1; i<=text.length+2; ++i)
+            hover += '\x9D';
+        hover += '\x8E'+this.chr$(0xFC)+'\x12';
+        for (let i=1; i<=text.length; ++i)
+            hover += this.chr$(0xA2);
+        hover += '\x92'+this.chr$(0xBE)+'\x91\x91';
+        for (let i=1; i<=text.length+2; ++i)
+            hover += '\x9D';
+
+        this.out(normal);
+
+        let _cbm = this;
+
+        const button = {
+            "text": text,
+            "context": context,
+            "color": this.fg,
+            "hovered": false,
+            "normal": normal,
+            "hover": hover,
+            "top": this.row,
+            "left": this.col,
+            "bottom": this.row+3,
+            "right": this.col+text.length+2,
+            "checkBounds": (x:number, y:number) =>
+                (x >= button.left && x < button.right && y >= button.top && y < button.bottom),            
+            "onHover": () => {
+                const wasBlinking = _cbm.hideCursor();
+                button.hovered = true;
+                let saveColor = this.fg;
+                this.fg = button.color;
+                const oldRowCol = _cbm.locate(button.left, button.top); 
+                _cbm.out(hover); 
+                this.fg = saveColor;
+                [this.row, this.col] = oldRowCol; 
+                if (wasBlinking) 
+                    _cbm.blinkCursor(); 
+            },
+            "onLeave": () => {
+                const wasBlinking = _cbm.hideCursor();
+                button.hovered = false;
+                let saveColor = this.fg;
+                this.fg = button.color;
+                const oldRowCol = _cbm.locate(button.left, button.top); 
+                _cbm.out(normal); 
+                this.fg = saveColor;
+                [this.row, this.col] = oldRowCol; 
+                if (wasBlinking) 
+                    _cbm.blinkCursor(); 
+            },
+            "checkClick": (x:number, y:number) => {
+                if (button.checkBounds(x, y)) {
+                    const wasBlinking = _cbm.hideCursor();
+                    let saveColor = this.fg;
+                    this.fg = button.color;
+                    const oldRowCol = _cbm.locate(button.left, button.top);
+                    _cbm.out(normal);
+                    this.fg = saveColor;
+
+                    if (button.onclick != null)
+                        button.onclick();
+
+                    [this.row, this.col] = oldRowCol;
+                    if (wasBlinking) 
+                        _cbm.blinkCursor();
+
+                    setTimeout(() => button.onHover(), 50);
+                } 
+            },
+            "checkMove": (x:number, y:number) => {
+                if (button.hovered) {
+                    if (!button.checkBounds(x, y))
+                        button.onLeave();
+                } else {
+                    if (button.checkBounds(x, y))
+                        button.onHover();
+                }
+            },
+            "checkLeave": () => {
+                if (button.hovered)
+                    button.onLeave();
+            },
+            "onclick": () => {
+                console.log(`onClick: ${button.text}`);
+            }
+        };
+
+        this.buttons.push(button);
+
+        return button;
+    }
+
+    public findButton(text: string): any {
+        let i: number = 0;
+        while (i < this.buttons.length && this.buttons[i].text !== text) 
+            ++i;
+        if (i < this.buttons.length)
+            return this.buttons[i];
+        return undefined;
+    }
+
+    public removeButton(button: any) {
+        let i: number = 0;
+        while (i < this.buttons.length && this.buttons[i] !== button) 
+            ++i;
+        if (i < this.buttons.length) {
+            // remove from screen
+            const saveColor = this.fg;
+            this.fg = button.fg;
+            for (let y = button.top; y < button.bottom; ++y) {
+                for (let x = button.left; x < button.right; ++x) {
+                    const offset = x + y*this.cols;
+                    this.pokeScreen(1024+offset, 32);
+                }
+            }
+            this.fg = saveColor;
+
+            // remove from collection
+            this.buttons.splice(i, 1);
+        }
+    }
+
+    public colorPicker() {
+        const _cbm = this;
+        this.init();
+        let saveRowCol = [this.row, this.col];
+        const saveColor = this.fg;
+
+        let setter = function(value: number) {}
+
+        const colorFn = (value: number) => {
+            setter(value);
+            redrawRadioButtons();
+        }
+
+        for (let i=0; i<2; ++i) {
+            for (let j=0; j<8; ++j) {
+                const color = i*8 + j;
+                const x = j*5;
+                const y = i*3 + 8;
+                this.foreground(color);
+                this.locate(x, y);
+                const button = this.addButton(color.toString());
+                button.onclick = () => { colorFn(color) };
+            }
+        }
+
+        this.fg = saveColor;
+
+        this.locate(3, 15);
+        const fore = this.addButton("Foreground");        
+        fore.onclick = () => { 
+            setter = setForeground; 
+            redrawRadioButtons();
+        }
+
+        this.locate(3, 18);
+        const back = this.addButton("Background");
+        back.onclick = () => { 
+            setter = setBackground; 
+            redrawRadioButtons();
+        }
+
+        this.locate(3, 21);
+        const bord = this.addButton("  Border  ");
+        bord.onclick = () => { 
+            setter = setBorder;
+            redrawRadioButtons();
+        }
+
+        let redrawRadioButtons = () => {
+            _cbm.lowercase = false;
+
+            _cbm.locate(1, fore.top+1);
+            _cbm.out(_cbm.chr$((setter === setForeground) ? 0x71 : 0x77));
+            _cbm.locate(fore.right+1, fore.top+1);
+            _cbm.out(fore.color + ' ');
+
+            _cbm.locate(1, back.top+1);
+            _cbm.out(_cbm.chr$((setter === setBackground) ? 0x71 : 0x77));
+            _cbm.locate(back.right+1, back.top+1);
+            _cbm.out(_cbm.getBackground() + ' ');
+            
+            _cbm.locate(1, bord.top+1);
+            _cbm.out(_cbm.chr$((setter === setBorder) ? 0x71 : 0x77));
+            _cbm.locate(bord.right+1, bord.top+1);
+            _cbm.out(_cbm.getBorder() + ' ');
+        };
+
+        let eraseRadioButtons = () => {
+            _cbm.locate(1, fore.top+1);
+            _cbm.out(' ');
+            _cbm.locate(fore.right+1, fore.top+1);
+            _cbm.out('  ');
+
+            _cbm.locate(1, back.top+1);
+            _cbm.out(' ');
+            _cbm.locate(back.right+1, back.top+1);
+            _cbm.out('  ');
+
+            _cbm.locate(1, bord.top+1);
+            _cbm.out(' ');
+            _cbm.locate(bord.right+1, bord.top+1);
+            _cbm.out('  ');
+        };
+
+        redrawRadioButtons();
+
+        let setForeground = function(value: number) {
+            _cbm.foreground(value);
+
+            fore.color = value;
+            _cbm.locate(fore.left, fore.top);
+            _cbm.out(fore.normal);
+
+            back.color = value;
+            _cbm.locate(back.left, back.top);
+            _cbm.out(back.normal);
+
+            bord.color = value;
+            _cbm.locate(bord.left, bord.top);
+            _cbm.out(bord.normal);
+        };
+
+        let setBackground = function(value: number) {
+            _cbm.background(value);
+        }
+
+        let setBorder = function(value: number) {
+            _cbm.border(value);
+        }
+
+        this.locate(37, 0);
+        const leave = this.addButton("X");
+        leave.onclick = () => { 
+            setTimeout( () => {
+                eraseRadioButtons();
+                while (_cbm.buttons.length > 0)
+                    _cbm.removeButton(_cbm.buttons[0]);
+                [_cbm.row, _cbm.col] = saveRowCol;
+                _cbm.blinkCursor();
+            }, 250); 
+        };
+
+        this.hideCursor();
     }
 }
