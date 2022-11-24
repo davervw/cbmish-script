@@ -1010,6 +1010,8 @@ class CbmishConsole {
                 eraseRadioButtons();
                 while (_cbm.buttons.length > 0)
                     _cbm.removeButton(_cbm.buttons[0]);
+                for (let i=0; i<_cbm.rows*_cbm.cols; ++i)
+                    _cbm.poke(13.5*4096+i, _cbm.fg);
                 [_cbm.row, _cbm.col] = saveRowCol;
                 _cbm.blinkCursor();
             }, 250); 

@@ -910,6 +910,8 @@ var CbmishConsole = /** @class */ (function () {
                 eraseRadioButtons();
                 while (_cbm.buttons.length > 0)
                     _cbm.removeButton(_cbm.buttons[0]);
+                for (var i = 0; i < _cbm.rows * _cbm.cols; ++i)
+                    _cbm.poke(13.5 * 4096 + i, _cbm.fg);
                 _cbm.row = saveRowCol[0], _cbm.col = saveRowCol[1];
                 _cbm.blinkCursor();
             }, 250);
