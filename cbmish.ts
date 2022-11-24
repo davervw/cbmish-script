@@ -947,6 +947,16 @@ class CbmishConsole {
         let redrawRadioButtons = () => {
             _cbm.lowercase = false;
 
+            for (let row = 0; row < 7; ++row) {
+                for (let col = 0; col < _cbm.cols; ++col) {
+                    if (col < 37 || row > 2) {
+                        const offset = col + row * _cbm.cols;
+                        _cbm.poke(13.5*4096 + offset, _cbm.fg);
+                    }
+                }
+            }
+            
+
             _cbm.locate(1, fore.top+1);
             _cbm.out(_cbm.chr$((setter === setForeground) ? 0x71 : 0x77));
             _cbm.locate(fore.right+1, fore.top+1);

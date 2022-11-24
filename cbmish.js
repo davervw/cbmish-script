@@ -45,7 +45,7 @@ var CbmishConsole = /** @class */ (function () {
             [128, 128, 128, 255],
             [160, 255, 160, 255],
             [96, 128, 240, 255],
-            [192, 192, 192, 255],
+            [192, 192, 192, 255], // [15] lt gray
         ];
     }
     CbmishConsole.prototype.CbmishConsole = function () {
@@ -416,7 +416,7 @@ var CbmishConsole = /** @class */ (function () {
     };
     CbmishConsole.prototype.background = function (bg) {
         var canvas = document.getElementsByTagName('canvas');
-        canvas[1].outerHTML = "<canvas class=\"background background" + (bg & 0xF) + "\"></canvas>";
+        canvas[1].outerHTML = "<canvas class=\"background background".concat((bg & 0xF), "\"></canvas>");
         this.bg = bg;
     };
     CbmishConsole.prototype.getBackground = function () {
@@ -424,7 +424,7 @@ var CbmishConsole = /** @class */ (function () {
     };
     CbmishConsole.prototype.border = function (color) {
         var canvas = document.getElementsByTagName('canvas');
-        canvas[0].outerHTML = "<canvas class=\"border border" + (color & 0xF) + "\"></canvas>";
+        canvas[0].outerHTML = "<canvas class=\"border border".concat((color & 0xF), "\"></canvas>");
         this.bd = color;
     };
     CbmishConsole.prototype.getBorder = function () {
@@ -777,7 +777,7 @@ var CbmishConsole = /** @class */ (function () {
                     button.onLeave();
             },
             "onclick": function () {
-                console.log("onClick: " + button.text);
+                console.log("onClick: ".concat(button.text));
             }
         };
         this.buttons.push(button);
@@ -860,6 +860,14 @@ var CbmishConsole = /** @class */ (function () {
         };
         var redrawRadioButtons = function () {
             _cbm.lowercase = false;
+            for (var row = 0; row < 7; ++row) {
+                for (var col = 0; col < _cbm.cols; ++col) {
+                    if (col < 37 || row > 2) {
+                        var offset = col + row * _cbm.cols;
+                        _cbm.poke(13.5 * 4096 + offset, _cbm.fg);
+                    }
+                }
+            }
             _cbm.locate(1, fore.top + 1);
             _cbm.out(_cbm.chr$((setter === setForeground) ? 0x71 : 0x77));
             _cbm.locate(fore.right + 1, fore.top + 1);
