@@ -7,6 +7,10 @@ Console (display output) that has features resembling an 8-bit classic system.  
 * CbmishConsole is a TypeScript class that in conjunction with HTML/CSS provides a C64 appearance screen which can be used to output strings, handle mouse clicks, etc.  Methods are provided to adjust colors, output an object (that is converted to string), and even poke to color and screen memory if that's your thing.
 * No BASIC is provided, you are expected to code in your own JavaScript.   Empty sample.ts is provided, otherwise use your browser's developer tools to code interactively.
 
+## Live Trial ##
+
+Hosted at github.io: [Live Trial](https://davervw.github.io/cbmish-script/)
+
 ## Build ##
 
 To build the JavaScript .js files referenced by index.html, use tsc (TypeScript compiler), available via npm, and can run in the background
