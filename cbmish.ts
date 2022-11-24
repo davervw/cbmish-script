@@ -448,6 +448,9 @@ class CbmishConsole {
     }
     
     scrollScreen() {
+        if (this.buttons.length > 0)
+            this.eraseButtons();
+
         // remove top line of screen from memory
         this.charCells.splice(0, this.cols);
         this.colorCells.splice(0, this.cols);
@@ -460,6 +463,9 @@ class CbmishConsole {
 
         // redraw from char/color cells memory
         this.redraw();
+
+        if (this.buttons.length > 0)
+            this.redrawButtons();
     }
 
     redraw() { // redraw screen by applying color to each cell
@@ -881,15 +887,12 @@ class CbmishConsole {
             ++i;
         if (i < this.buttons.length) {
             // remove from screen
-            const saveColor = this.fg;
-            this.fg = button.fg;
             for (let y = button.top; y < button.bottom; ++y) {
                 for (let x = button.left; x < button.right; ++x) {
                     const offset = x + y*this.cols;
                     this.pokeScreen(1024+offset, 32);
                 }
             }
-            this.fg = saveColor;
 
             // remove from collection
             this.buttons.splice(i, 1);
@@ -899,6 +902,35 @@ class CbmishConsole {
     public removeButtons() {        
         while (this.buttons.length > 0)
             this.removeButton(this.buttons[0]);
+    }
+
+    public eraseButtons() {
+        for (let button of this.buttons) {
+            for (let y = button.top; y < button.bottom; ++y) {
+                for (let x = button.left; x < button.right; ++x) {
+                    const offset = x + y * this.cols;
+                    this.pokeScreen(1024 + offset, 32);
+                }
+            }
+        }
+    }
+
+    public redrawButtons() {
+        const wasBlinking = this.hideCursor();
+        const saveRowCol = this.locate(0, 0);
+        const saveColor = this.fg;
+        for (let button of this.buttons) {
+            this.fg = button.color;
+            this.locate(button.left, button.top);
+            if (button.hovered)
+                this.out(button.hover);
+            else
+                this.out(button.normal);
+        }
+        this.fg = saveColor;
+        [this.row, this.col] = saveRowCol;
+        if (wasBlinking)
+            this.blinkCursor();
     }
 
     public colorPicker(showExit: boolean = true) {

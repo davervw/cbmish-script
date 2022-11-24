@@ -383,6 +383,8 @@ var CbmishConsole = /** @class */ (function () {
             this.dirtyheight += (y + 8 - (this.dirtyy + this.dirtyheight));
     };
     CbmishConsole.prototype.scrollScreen = function () {
+        if (this.buttons.length > 0)
+            this.eraseButtons();
         // remove top line of screen from memory
         this.charCells.splice(0, this.cols);
         this.colorCells.splice(0, this.cols);
@@ -393,6 +395,8 @@ var CbmishConsole = /** @class */ (function () {
         }
         // redraw from char/color cells memory
         this.redraw();
+        if (this.buttons.length > 0)
+            this.redrawButtons();
     };
     CbmishConsole.prototype.redraw = function () {
         var wasBlinking = this.hideCursor();
@@ -801,15 +805,12 @@ var CbmishConsole = /** @class */ (function () {
             ++i;
         if (i < this.buttons.length) {
             // remove from screen
-            var saveColor = this.fg;
-            this.fg = button.fg;
             for (var y = button.top; y < button.bottom; ++y) {
                 for (var x = button.left; x < button.right; ++x) {
                     var offset = x + y * this.cols;
                     this.pokeScreen(1024 + offset, 32);
                 }
             }
-            this.fg = saveColor;
             // remove from collection
             this.buttons.splice(i, 1);
         }
@@ -817,6 +818,35 @@ var CbmishConsole = /** @class */ (function () {
     CbmishConsole.prototype.removeButtons = function () {
         while (this.buttons.length > 0)
             this.removeButton(this.buttons[0]);
+    };
+    CbmishConsole.prototype.eraseButtons = function () {
+        for (var _i = 0, _a = this.buttons; _i < _a.length; _i++) {
+            var button = _a[_i];
+            for (var y = button.top; y < button.bottom; ++y) {
+                for (var x = button.left; x < button.right; ++x) {
+                    var offset = x + y * this.cols;
+                    this.pokeScreen(1024 + offset, 32);
+                }
+            }
+        }
+    };
+    CbmishConsole.prototype.redrawButtons = function () {
+        var wasBlinking = this.hideCursor();
+        var saveRowCol = this.locate(0, 0);
+        var saveColor = this.fg;
+        for (var _i = 0, _a = this.buttons; _i < _a.length; _i++) {
+            var button = _a[_i];
+            this.fg = button.color;
+            this.locate(button.left, button.top);
+            if (button.hovered)
+                this.out(button.hover);
+            else
+                this.out(button.normal);
+        }
+        this.fg = saveColor;
+        this.row = saveRowCol[0], this.col = saveRowCol[1];
+        if (wasBlinking)
+            this.blinkCursor();
     };
     CbmishConsole.prototype.colorPicker = function (showExit) {
         if (showExit === void 0) { showExit = true; }
