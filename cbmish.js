@@ -600,6 +600,8 @@ var CbmishConsole = /** @class */ (function () {
         this.right();
         this.right();
         this.out('0123456789ABCDEF 0123456789ABCDEF');
+        this.locate(0, 7);
+        this.blinkCursor();
     };
     CbmishConsole.prototype.petsciiChr$Chart = function () {
         for (var row = 0; row < 16; ++row) {
@@ -635,6 +637,8 @@ var CbmishConsole = /** @class */ (function () {
         this.right();
         this.right();
         this.out('0123456789ABCDEF 0123456789ABCDEF');
+        this.locate(0, 7);
+        this.blinkCursor();
     };
     CbmishConsole.prototype.maze = function (rows) {
         var _this = this;
@@ -929,7 +933,8 @@ var CbmishConsole = /** @class */ (function () {
                 }, 250);
             };
         }
-        this.hideCursor();
+        this.locate(0, 7);
+        this.blinkCursor();
     };
     return CbmishConsole;
 }());

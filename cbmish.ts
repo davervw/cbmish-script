@@ -673,6 +673,8 @@ class CbmishConsole {
         this.right();
         this.right();
         this.out('0123456789ABCDEF 0123456789ABCDEF');
+        this.locate(0, 7);
+        this.blinkCursor();
     }
 
     public petsciiChr$Chart() {
@@ -710,6 +712,8 @@ class CbmishConsole {
         this.right();
         this.right();
         this.out('0123456789ABCDEF 0123456789ABCDEF');
+        this.locate(0, 7);
+        this.blinkCursor();
     }
 
     public maze(rows: number = this.rows) {
@@ -1032,6 +1036,7 @@ class CbmishConsole {
             };
         }
 
-        this.hideCursor();
+        this.locate(0, 7);
+        this.blinkCursor();
     }
 }

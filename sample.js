@@ -47,6 +47,9 @@ var mainMenu = function () {
             cbm.maze(19);
         }, 250);
     };
+    cbm.locate(0, 7);
+    cbm.foreground(14);
+    cbm.blinkCursor();
 };
 var addleave = function () {
     cbm.foreground(1);
