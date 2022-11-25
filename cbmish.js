@@ -934,7 +934,6 @@ var CbmishConsole = /** @class */ (function () {
             _cbm.locate(bord.right + 1, bord.top + 1);
             _cbm.out('  ');
         };
-        redrawRadioButtons();
         var setForeground = function (value) {
             _cbm.foreground(value);
             fore.color = value;
@@ -953,6 +952,8 @@ var CbmishConsole = /** @class */ (function () {
         var setBorder = function (value) {
             _cbm.border(value);
         };
+        setter = setForeground;
+        redrawRadioButtons();
         if (showExit) {
             this.locate(37, 0);
             var leave = this.addButton("X");

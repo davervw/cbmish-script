@@ -997,7 +997,6 @@ class CbmishConsole {
                 }
             }
             
-
             _cbm.locate(1, fore.top+1);
             _cbm.out(_cbm.chr$((setter === setForeground) ? 0x71 : 0x77));
             _cbm.locate(fore.right+1, fore.top+1);
@@ -1031,8 +1030,6 @@ class CbmishConsole {
             _cbm.out('  ');
         };
 
-        redrawRadioButtons();
-
         let setForeground = function(value: number) {
             _cbm.foreground(value);
 
@@ -1056,6 +1053,9 @@ class CbmishConsole {
         let setBorder = function(value: number) {
             _cbm.border(value);
         }
+
+        setter = setForeground; 
+        redrawRadioButtons();
 
         if (showExit) {
             this.locate(37, 0);
