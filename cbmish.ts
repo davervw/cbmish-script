@@ -592,10 +592,11 @@ class CbmishConsole {
             this.insert();
         else if (key == 'Escape' && !shiftKey && !ctrlKey && !altKey)
             this.escapePressed = true;
-        else if (key == 'PageUp' && !shiftKey && !ctrlKey && !altKey && this.escapePressed)
+        else if (key == 'PageUp' && !shiftKey && !ctrlKey && !altKey && this.escapePressed
+                || key == 'Cancel' && !shiftKey && ctrlKey && !altKey) {
+            this.removeButtons();
             this.init();
-        else if (key == 'Cancel' && !shiftKey && ctrlKey && !altKey)
-            this.init();
+        }
     }
 
     private keyup(key: string, shiftKey: boolean, ctrlKey: boolean, altKey: boolean) {

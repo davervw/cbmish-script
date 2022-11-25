@@ -520,10 +520,11 @@ var CbmishConsole = /** @class */ (function () {
             this.insert();
         else if (key == 'Escape' && !shiftKey && !ctrlKey && !altKey)
             this.escapePressed = true;
-        else if (key == 'PageUp' && !shiftKey && !ctrlKey && !altKey && this.escapePressed)
+        else if (key == 'PageUp' && !shiftKey && !ctrlKey && !altKey && this.escapePressed
+            || key == 'Cancel' && !shiftKey && ctrlKey && !altKey) {
+            this.removeButtons();
             this.init();
-        else if (key == 'Cancel' && !shiftKey && ctrlKey && !altKey)
-            this.init();
+        }
     };
     CbmishConsole.prototype.keyup = function (key, shiftKey, ctrlKey, altKey) {
         if (key == 'Escape' && !shiftKey && !ctrlKey && !altKey)
