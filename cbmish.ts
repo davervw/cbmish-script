@@ -801,22 +801,26 @@ class CbmishConsole {
             button.checkLeave();
     }
 
-    public addButton(text: string, context: any = undefined): any {
+    public addButton(text: string, context: any = undefined, rounded: boolean = true): any {
         this.lowercase = false;
 
-        let normal = '\x8E' + this.chr$(0x75);
+        const normalCorners = (rounded) 
+            ? ''+this.chr$(0x75)+this.chr$(0x69)+this.chr$(0x6A)+this.chr$(0x6B)
+            : ''+this.chr$(0xB0)+this.chr$(0xAE)+this.chr$(0xAD)+this.chr$(0xBD);
+
+        let normal = '\x8E' + normalCorners[0];
         for (let i=1; i<=text.length; ++i)
             normal += this.chr$(0x60);
-        normal += this.chr$(0x69)+'\x11';
+        normal += normalCorners[1]+'\x11';
         for (let i=1; i<=text.length+2; ++i)
             normal += '\x9D';
         normal += this.chr$(0x62)+'\x0E'+text+'\x8E'+this.chr$(0x62)+'\x11';
         for (let i=1; i<=text.length+2; ++i)
             normal += '\x9D';
-        normal += '\x8E' + this.chr$(0x6A);
+        normal += '\x8E' + normalCorners[2];
         for (let i=1; i<=text.length; ++i)
             normal += this.chr$(0x60);
-        normal += this.chr$(0x6B)+'\x91\x91';
+        normal += normalCorners[3]+'\x91\x91';
         for (let i=1; i<=text.length+2; ++i)
             normal += '\x9D';
 
