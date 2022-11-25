@@ -547,9 +547,12 @@ class CbmishConsole {
     }
 
     private keypress(event: KeyboardEvent) {
-        const key = event.key;
-        if (key.length == 1)
-            this.out(key);
+        let key = event.key;
+        if (key.length != 1)
+            return;
+        if (!this.lowercase && key >= 'A' && key <= 'Z')
+            key = this.chr$(key.charCodeAt(0)-'A'.charCodeAt(0)+'a'.charCodeAt(0)) ?? '';
+        this.out(key);
     }
 
     private keydown(key: string, shiftKey: boolean, ctrlKey: boolean, altKey: boolean): boolean {

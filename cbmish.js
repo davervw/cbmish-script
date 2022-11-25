@@ -471,9 +471,13 @@ var CbmishConsole = /** @class */ (function () {
         this.pokeScreen(1024 + offset, this.charCells[offset] ^ 128);
     };
     CbmishConsole.prototype.keypress = function (event) {
+        var _a;
         var key = event.key;
-        if (key.length == 1)
-            this.out(key);
+        if (key.length != 1)
+            return;
+        if (!this.lowercase && key >= 'A' && key <= 'Z')
+            key = (_a = this.chr$(key.charCodeAt(0) - 'A'.charCodeAt(0) + 'a'.charCodeAt(0))) !== null && _a !== void 0 ? _a : '';
+        this.out(key);
     };
     CbmishConsole.prototype.keydown = function (key, shiftKey, ctrlKey, altKey) {
         if (key == 'Home' && !altKey) {
