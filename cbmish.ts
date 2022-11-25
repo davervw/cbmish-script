@@ -780,8 +780,11 @@ class CbmishConsole {
         const x = Math.floor(event.offsetX / 8);
         const y = Math.floor(event.offsetY / 8);
         //console.log(`click ${x},${y}`)
+        let found = false;
         for (let button of this.buttons)
-            button.checkClick(x, y);
+            found = found || button.checkClick(x, y);
+        if (!found)
+            this.locate(x, y);
         event.preventDefault();
     }
 
@@ -881,7 +884,7 @@ class CbmishConsole {
                 if (wasBlinking) 
                     _cbm.blinkCursor(); 
             },
-            "checkClick": (x:number, y:number) => {
+            "checkClick": (x:number, y:number): boolean => {
                 if (button.checkBounds(x, y)) {
                     const wasBlinking = _cbm.hideCursor();
                     let saveColor = this.fg;
@@ -898,7 +901,9 @@ class CbmishConsole {
                         _cbm.blinkCursor();
 
                     setTimeout(() => button.onHover(), 50);
-                } 
+                    return true;
+                }
+                return false;
             },
             "checkMove": (x:number, y:number) => {
                 if (button.hovered) {

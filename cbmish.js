@@ -714,10 +714,13 @@ var CbmishConsole = /** @class */ (function () {
         var x = Math.floor(event.offsetX / 8);
         var y = Math.floor(event.offsetY / 8);
         //console.log(`click ${x},${y}`)
+        var found = false;
         for (var _i = 0, _a = this.buttons; _i < _a.length; _i++) {
             var button = _a[_i];
-            button.checkClick(x, y);
+            found = found || button.checkClick(x, y);
         }
+        if (!found)
+            this.locate(x, y);
         event.preventDefault();
     };
     CbmishConsole.prototype.onmousemovecanvas = function (event) {
@@ -830,7 +833,9 @@ var CbmishConsole = /** @class */ (function () {
                     if (wasBlinking)
                         _cbm.blinkCursor();
                     setTimeout(function () { return button.onHover(); }, 50);
+                    return true;
                 }
+                return false;
             },
             "checkMove": function (x, y) {
                 if (button.hovered) {
