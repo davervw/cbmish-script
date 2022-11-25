@@ -552,6 +552,7 @@ class CbmishConsole {
     }
 
     private keypress(event: KeyboardEvent) {
+        //console.log(`keypress: ${event.key}`);
         let key = event.key;
         if (key.length != 1)
             return;
@@ -561,6 +562,7 @@ class CbmishConsole {
     }
 
     private keydown(key: string, shiftKey: boolean, ctrlKey: boolean, altKey: boolean): boolean {
+        //console.log(`keydown: ${key} ${shiftKey} ${ctrlKey} ${altKey}`);
         if (key == 'Home' && !altKey) {
             if (shiftKey && !ctrlKey)
                 this.clear()
@@ -629,10 +631,10 @@ class CbmishConsole {
             if (this.hideCursor())
                 this.blinkCursor();
             return true;
-        } else if (key >= 'a' && key <= 'z' && !ctrlKey && !altKey && this.tabPressed) {
+        } else if (key.length == 1 && key >= 'a' && key <= 'z' && !ctrlKey && !altKey && this.tabPressed) {
             this.out(String.fromCharCode(key.charCodeAt(0)-'a'.charCodeAt(0)+1));
             return true;
-        } else if (key >= 'A' && key <= 'Z' && !ctrlKey && !altKey && this.tabPressed) {
+        } else if (key.length == 1 && key >= 'A' && key <= 'Z' && !ctrlKey && !altKey && this.tabPressed) {
             this.out(String.fromCharCode(key.charCodeAt(0)-'A'.charCodeAt(0)+129));
             return true;
         }

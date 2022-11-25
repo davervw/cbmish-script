@@ -478,6 +478,7 @@ var CbmishConsole = /** @class */ (function () {
     };
     CbmishConsole.prototype.keypress = function (event) {
         var _a;
+        //console.log(`keypress: ${event.key}`);
         var key = event.key;
         if (key.length != 1)
             return;
@@ -486,6 +487,7 @@ var CbmishConsole = /** @class */ (function () {
         this.out(key);
     };
     CbmishConsole.prototype.keydown = function (key, shiftKey, ctrlKey, altKey) {
+        //console.log(`keydown: ${key} ${shiftKey} ${ctrlKey} ${altKey}`);
         if (key == 'Home' && !altKey) {
             if (shiftKey && !ctrlKey)
                 this.clear();
@@ -567,11 +569,11 @@ var CbmishConsole = /** @class */ (function () {
                 this.blinkCursor();
             return true;
         }
-        else if (key >= 'a' && key <= 'z' && !ctrlKey && !altKey && this.tabPressed) {
+        else if (key.length == 1 && key >= 'a' && key <= 'z' && !ctrlKey && !altKey && this.tabPressed) {
             this.out(String.fromCharCode(key.charCodeAt(0) - 'a'.charCodeAt(0) + 1));
             return true;
         }
-        else if (key >= 'A' && key <= 'Z' && !ctrlKey && !altKey && this.tabPressed) {
+        else if (key.length == 1 && key >= 'A' && key <= 'Z' && !ctrlKey && !altKey && this.tabPressed) {
             this.out(String.fromCharCode(key.charCodeAt(0) - 'A'.charCodeAt(0) + 129));
             return true;
         }
