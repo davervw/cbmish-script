@@ -55,12 +55,18 @@ var addleave = function () {
     cbm.foreground(1);
     cbm.locate(37, 0);
     var leave = cbm.addButton("X");
-    leave.onclick = function () { onleave(); };
+    leave.onclick = function () {
+        var _cbm = cbm;
+        _cbm.escapePressed = true;
+        onleave();
+    };
 };
 var onleave = function () {
     setTimeout(function () {
         cbm.removeButtons();
         mainMenu();
+        var _cbm = cbm;
+        _cbm.escapePressed = false;
     }, 250);
 };
 mainMenu();

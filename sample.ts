@@ -66,13 +66,19 @@ const addleave = function () {
     cbm.foreground(1);
     cbm.locate(37, 0);
     const leave = cbm.addButton("X");
-    leave.onclick = () => { onleave(); }
+    leave.onclick = () => { 
+        let _cbm:any = cbm; 
+        _cbm.escapePressed=true; 
+        onleave(); 
+    }
 }
 
 const onleave = function () {
     setTimeout(() => {
         cbm.removeButtons();
         mainMenu();
+        let _cbm:any = cbm;
+        _cbm.escapePressed=false;
     }, 250);
 };
 
