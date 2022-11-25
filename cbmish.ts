@@ -244,6 +244,8 @@ class CbmishConsole {
 
     public clear() {
         let wasBlinking = this.hideCursor();
+        if (this.buttons.length > 0)
+            this.eraseButtons();
         
         this.homeScreen();
         const limit = this.rows * this.cols - 1; // one less to avoid scroll
@@ -253,6 +255,8 @@ class CbmishConsole {
         this.poke(13.5 * 4096 + limit, this.fg);
 	    this.homeScreen();
         
+        if (this.buttons.length> 0)
+            this.redrawButtons();
         if (wasBlinking)
             this.blinkCursor();
     }

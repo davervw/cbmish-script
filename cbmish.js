@@ -216,6 +216,8 @@ var CbmishConsole = /** @class */ (function () {
     };
     CbmishConsole.prototype.clear = function () {
         var wasBlinking = this.hideCursor();
+        if (this.buttons.length > 0)
+            this.eraseButtons();
         this.homeScreen();
         var limit = this.rows * this.cols - 1; // one less to avoid scroll
         for (var i = 0; i < limit; ++i)
@@ -223,6 +225,8 @@ var CbmishConsole = /** @class */ (function () {
         this.poke(1024 + limit, 32);
         this.poke(13.5 * 4096 + limit, this.fg);
         this.homeScreen();
+        if (this.buttons.length > 0)
+            this.redrawButtons();
         if (wasBlinking)
             this.blinkCursor();
     };
