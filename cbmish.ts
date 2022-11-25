@@ -22,6 +22,7 @@ class CbmishConsole {
     private cursorIntervalId: number | undefined;
     private repeatIntervalId: number | undefined;
     private escapePressed: boolean = false;
+    private tabPressed: boolean = false;
 
     private canvas: any = document.getElementById("screen");
     private rows = Math.floor(this.canvas.getAttribute('height') / 8);
@@ -57,7 +58,7 @@ class CbmishConsole {
     public CbmishConsole() {
         this.init();
         window.addEventListener('keypress', (event: KeyboardEvent) => { this.keypress(event); });
-        window.addEventListener('keydown', (event: KeyboardEvent) => { this.keydown(event.key, event.shiftKey, event.ctrlKey, event.altKey); });
+        window.addEventListener('keydown', (event: KeyboardEvent) => { if (this.keydown(event.key, event.shiftKey, event.ctrlKey, event.altKey)) event.preventDefault(); });
         window.addEventListener('keyup', (event: KeyboardEvent) => { this.keyup(event.key, event.shiftKey, event.ctrlKey, event.altKey); });
         this.canvas.addEventListener('click', (event: MouseEvent) => this.onclickcanvas(event), false);
         this.canvas.addEventListener('mousemove', (event: MouseEvent) => this.onmousemovecanvas(event), false);
@@ -551,7 +552,7 @@ class CbmishConsole {
             this.out(key);
     }
 
-    private keydown(key: string, shiftKey: boolean, ctrlKey: boolean, altKey: boolean) {
+    private keydown(key: string, shiftKey: boolean, ctrlKey: boolean, altKey: boolean): boolean {
         if (key == 'Home' && !altKey) {
             if (shiftKey && !ctrlKey)
                 this.clear()
@@ -590,18 +591,51 @@ class CbmishConsole {
         else if (key == 'Insert' && !ctrlKey && !altKey
                 || (key == 'Backspace' || key == 'Delete') && shiftKey && !ctrlKey && !altKey)
             this.insert();
-        else if (key == 'Escape' && !shiftKey && !ctrlKey && !altKey)
+        else if (key == 'Escape') {
             this.escapePressed = true;
-        else if (key == 'PageUp' && !shiftKey && !ctrlKey && !altKey && this.escapePressed
+            return true;
+        } else if (key == 'Tab') {
+            this.tabPressed = true;
+            return true;
+        } else if (key == 'PageUp' && !shiftKey && !ctrlKey && !altKey && this.escapePressed
                 || key == 'Cancel' && !shiftKey && ctrlKey && !altKey) {
             this.removeButtons();
             this.init();
+        } else if (key >= '1' && key <= '8' && !shiftKey && !ctrlKey && !altKey && this.tabPressed) {
+            this.fg = key.charCodeAt(0)-'0'.charCodeAt(0)-1;
+            if (this.hideCursor())
+                this.blinkCursor();
+            return true;
+        } else if (key == '9' && !shiftKey && !ctrlKey && !altKey && this.tabPressed) {
+            this.reverse = true;
+            if (this.hideCursor())
+                this.blinkCursor();
+            return true;
+        } else if (key == '0' && !shiftKey && !ctrlKey && !altKey && this.tabPressed) {
+            this.reverse = false;
+            if (this.hideCursor())
+                this.blinkCursor();
+            return true;
+        } else if (key >= '1' && key <= '8' && !shiftKey && ctrlKey && !altKey && !this.tabPressed) {
+            this.fg = key.charCodeAt(0)-'0'.charCodeAt(0)+7;
+            if (this.hideCursor())
+                this.blinkCursor();
+            return true;
+        } else if (key >= 'a' && key <= 'z' && !ctrlKey && !altKey && this.tabPressed) {
+            this.out(String.fromCharCode(key.charCodeAt(0)-'a'.charCodeAt(0)+1));
+            return true;
+        } else if (key >= 'A' && key <= 'Z' && !ctrlKey && !altKey && this.tabPressed) {
+            this.out(String.fromCharCode(key.charCodeAt(0)-'A'.charCodeAt(0)+129));
+            return true;
         }
+        return false;
     }
 
     private keyup(key: string, shiftKey: boolean, ctrlKey: boolean, altKey: boolean) {
-        if (key == 'Escape' && !shiftKey && !ctrlKey && !altKey)
+        if (key == 'Escape')
             this.escapePressed = false;
+        else if (key == 'Tab')
+            this.tabPressed = false;
     }
 
     public repeat(fn:() => void, count: number|undefined = undefined, delayms = 5) {

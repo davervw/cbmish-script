@@ -20,6 +20,7 @@ var CbmishConsole = /** @class */ (function () {
         this.cursorBlinking = false;
         this.cursorShown = false;
         this.escapePressed = false;
+        this.tabPressed = false;
         this.canvas = document.getElementById("screen");
         this.rows = Math.floor(this.canvas.getAttribute('height') / 8);
         this.cols = Math.floor(this.canvas.getAttribute('width') / 8);
@@ -52,7 +53,8 @@ var CbmishConsole = /** @class */ (function () {
         var _this = this;
         this.init();
         window.addEventListener('keypress', function (event) { _this.keypress(event); });
-        window.addEventListener('keydown', function (event) { _this.keydown(event.key, event.shiftKey, event.ctrlKey, event.altKey); });
+        window.addEventListener('keydown', function (event) { if (_this.keydown(event.key, event.shiftKey, event.ctrlKey, event.altKey))
+            event.preventDefault(); });
         window.addEventListener('keyup', function (event) { _this.keyup(event.key, event.shiftKey, event.ctrlKey, event.altKey); });
         this.canvas.addEventListener('click', function (event) { return _this.onclickcanvas(event); }, false);
         this.canvas.addEventListener('mousemove', function (event) { return _this.onmousemovecanvas(event); }, false);
@@ -518,17 +520,58 @@ var CbmishConsole = /** @class */ (function () {
         else if (key == 'Insert' && !ctrlKey && !altKey
             || (key == 'Backspace' || key == 'Delete') && shiftKey && !ctrlKey && !altKey)
             this.insert();
-        else if (key == 'Escape' && !shiftKey && !ctrlKey && !altKey)
+        else if (key == 'Escape') {
             this.escapePressed = true;
+            return true;
+        }
+        else if (key == 'Tab') {
+            this.tabPressed = true;
+            return true;
+        }
         else if (key == 'PageUp' && !shiftKey && !ctrlKey && !altKey && this.escapePressed
             || key == 'Cancel' && !shiftKey && ctrlKey && !altKey) {
             this.removeButtons();
             this.init();
         }
+        else if (key >= '1' && key <= '8' && !shiftKey && !ctrlKey && !altKey && this.tabPressed) {
+            this.fg = key.charCodeAt(0) - '0'.charCodeAt(0) - 1;
+            if (this.hideCursor())
+                this.blinkCursor();
+            return true;
+        }
+        else if (key == '9' && !shiftKey && !ctrlKey && !altKey && this.tabPressed) {
+            this.reverse = true;
+            if (this.hideCursor())
+                this.blinkCursor();
+            return true;
+        }
+        else if (key == '0' && !shiftKey && !ctrlKey && !altKey && this.tabPressed) {
+            this.reverse = false;
+            if (this.hideCursor())
+                this.blinkCursor();
+            return true;
+        }
+        else if (key >= '1' && key <= '8' && !shiftKey && ctrlKey && !altKey && !this.tabPressed) {
+            this.fg = key.charCodeAt(0) - '0'.charCodeAt(0) + 7;
+            if (this.hideCursor())
+                this.blinkCursor();
+            return true;
+        }
+        else if (key >= 'a' && key <= 'z' && !ctrlKey && !altKey && this.tabPressed) {
+            this.out(String.fromCharCode(key.charCodeAt(0) - 'a'.charCodeAt(0) + 1));
+            return true;
+        }
+        else if (key >= 'A' && key <= 'Z' && !ctrlKey && !altKey && this.tabPressed) {
+            this.out(String.fromCharCode(key.charCodeAt(0) - 'A'.charCodeAt(0) + 129));
+            return true;
+        }
+        return false;
     };
     CbmishConsole.prototype.keyup = function (key, shiftKey, ctrlKey, altKey) {
-        if (key == 'Escape' && !shiftKey && !ctrlKey && !altKey)
+        if (key == 'Escape')
             this.escapePressed = false;
+        else if (key == 'Tab')
+            this.tabPressed = false;
     };
     CbmishConsole.prototype.repeat = function (fn, count, delayms) {
         var _this = this;
