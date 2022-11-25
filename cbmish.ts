@@ -55,6 +55,40 @@ class CbmishConsole {
         [192, 192, 192, 255], // [15] lt gray
     ];
 
+    cbmGraphicsKeys = [
+        { 'key': 'a', 'code': 176 },
+        { 'key': 'b', 'code': 191 },
+        { 'key': 'c', 'code': 188 },
+        { 'key': 'd', 'code': 172 },
+        { 'key': 'e', 'code': 177 },
+        { 'key': 'f', 'code': 187 },
+        { 'key': 'g', 'code': 165 },
+        { 'key': 'h', 'code': 180 },
+        { 'key': 'i', 'code': 162 },
+        { 'key': 'j', 'code': 181 },
+        { 'key': 'k', 'code': 161 },
+        { 'key': 'l', 'code': 182 },
+        { 'key': 'm', 'code': 167 },
+        { 'key': 'n', 'code': 170 },
+        { 'key': 'o', 'code': 185 },
+        { 'key': 'p', 'code': 175 },
+        { 'key': 'q', 'code': 171 },
+        { 'key': 'r', 'code': 178 },
+        { 'key': 's', 'code': 174 },
+        { 'key': 't', 'code': 163 },
+        { 'key': 'u', 'code': 184 },
+        { 'key': 'v', 'code': 190 },
+        { 'key': 'w', 'code': 179 },
+        { 'key': 'x', 'code': 189 },
+        { 'key': 'y', 'code': 183 },
+        { 'key': 'z', 'code': 173 },
+        { 'key': '\\', 'code': 168 },
+        { 'key': '^', 'code': 126 },
+        { 'key': '@', 'code': 164 },
+        { 'key': '-', 'code': 220 },
+        { 'key': '=', 'code': 166 },
+    ];
+
     public CbmishConsole() {
         this.init();
         window.addEventListener('keypress', (event: KeyboardEvent) => { this.keypress(event); });
@@ -558,6 +592,8 @@ class CbmishConsole {
             return;
         if (!this.lowercase && key >= 'A' && key <= 'Z')
             key = this.chr$(key.charCodeAt(0)-'A'.charCodeAt(0)+'a'.charCodeAt(0)) ?? '';
+        else if (key == '|')
+            key = this.chr$(0x62) ?? '';
         this.out(key);
     }
 
@@ -626,17 +662,27 @@ class CbmishConsole {
             if (this.hideCursor())
                 this.blinkCursor();
             return true;
-        } else if (key >= '1' && key <= '8' && !shiftKey && ctrlKey && !altKey && !this.tabPressed) {
+        } else if (key >= '1' && key <= '8' && !shiftKey && (ctrlKey || altKey) && !this.tabPressed) {
             this.fg = key.charCodeAt(0)-'0'.charCodeAt(0)+7;
             if (this.hideCursor())
                 this.blinkCursor();
             return true;
-        } else if (key.length == 1 && key >= 'a' && key <= 'z' && !ctrlKey && !altKey && this.tabPressed) {
+        } else if (key == '@' && ctrlKey && altKey && !this.tabPressed)
+            this.out(this.chr$(186));
+        else if (key == '+' && ctrlKey && altKey && !this.tabPressed)
+            this.out(this.chr$(0x7B)); 
+        else if (key.length == 1 && key >= 'a' && key <= 'z' && !ctrlKey && !altKey && this.tabPressed) {
             this.out(String.fromCharCode(key.charCodeAt(0)-'a'.charCodeAt(0)+1));
             return true;
         } else if (key.length == 1 && key >= 'A' && key <= 'Z' && !ctrlKey && !altKey && this.tabPressed) {
             this.out(String.fromCharCode(key.charCodeAt(0)-'A'.charCodeAt(0)+129));
             return true;
+        } else if (key.length == 1 && (ctrlKey || altKey) && !this.tabPressed) {
+            let code = this.cbmGraphicsKeys.find(x => x.key == key)?.code;
+            if (code != null) {
+                this.out(this.chr$(code));
+                return true;
+            }
         }
         return false;
     }
