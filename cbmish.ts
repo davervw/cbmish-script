@@ -389,7 +389,12 @@ class CbmishConsole {
             this.colorCells[address - 13.5*4096] = value & 0xF;
             let c = this.charCells[address - 13.5*4096];
             this.pokeScreen(address - 13.5*4096 + 1024, c);
-        }
+        } else if (address == 646)
+            this.fg = value & 15;
+        else if (address = 53280)
+            this.border(value & 15);
+        else if (address = 53281)
+            this.background(value & 15);
         
         if (wasBlinking)
             this.blinkCursor();
