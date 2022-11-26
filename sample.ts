@@ -8,6 +8,7 @@ const mainMenu = function() {
     const x=15;
     let y=6;
     cbm.locate(x, y);
+    cbm.fg = 7;
     const b1 = cbm.addButton("Colors  ");
     b1.onclick = () => {
         setTimeout(
@@ -21,6 +22,7 @@ const mainMenu = function() {
     }
 
     cbm.locate(x, y+=3);
+    cbm.fg = 1;
     const b2 = cbm.addButton("chr$()s ");
     b2.onclick = () => {
         setTimeout(
@@ -33,6 +35,7 @@ const mainMenu = function() {
     }
 
     cbm.locate(x, y+=3);
+    cbm.fg = 3;
     const b3 = cbm.addButton("Petscii ");
     b3.onclick = () => {
         setTimeout(
@@ -45,6 +48,7 @@ const mainMenu = function() {
     }
 
     cbm.locate(x, y+=3);
+    cbm.fg = 10;
     const b4 = cbm.addButton("Maze"+cbm.chr$(110)+cbm.chr$(109)+cbm.chr$(110)+cbm.chr$(109));
     b4.onclick = () => {
         setTimeout(
@@ -58,6 +62,7 @@ const mainMenu = function() {
     }
 
     cbm.locate(x, y+=3);
+    cbm.fg = 13;
     const b5 = cbm.addButton("Keyboard");
     b5.onclick = () => {
         setTimeout(

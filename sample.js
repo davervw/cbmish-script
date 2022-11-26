@@ -6,6 +6,7 @@ var mainMenu = function () {
     var x = 15;
     var y = 6;
     cbm.locate(x, y);
+    cbm.fg = 7;
     var b1 = cbm.addButton("Colors  ");
     b1.onclick = function () {
         setTimeout(function () {
@@ -17,6 +18,7 @@ var mainMenu = function () {
         }, 250);
     };
     cbm.locate(x, y += 3);
+    cbm.fg = 1;
     var b2 = cbm.addButton("chr$()s ");
     b2.onclick = function () {
         setTimeout(function () {
@@ -27,6 +29,7 @@ var mainMenu = function () {
         }, 250);
     };
     cbm.locate(x, y += 3);
+    cbm.fg = 3;
     var b3 = cbm.addButton("Petscii ");
     b3.onclick = function () {
         setTimeout(function () {
@@ -37,6 +40,7 @@ var mainMenu = function () {
         }, 250);
     };
     cbm.locate(x, y += 3);
+    cbm.fg = 10;
     var b4 = cbm.addButton("Maze" + cbm.chr$(110) + cbm.chr$(109) + cbm.chr$(110) + cbm.chr$(109));
     b4.onclick = function () {
         setTimeout(function () {
@@ -48,6 +52,7 @@ var mainMenu = function () {
         }, 250);
     };
     cbm.locate(x, y += 3);
+    cbm.fg = 13;
     var b5 = cbm.addButton("Keyboard");
     b5.onclick = function () {
         setTimeout(function () {
