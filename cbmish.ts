@@ -55,7 +55,7 @@ class CbmishConsole {
         [192, 192, 192, 255], // [15] lt gray
     ];
 
-    cbmGraphicsKeys = [
+    private cbmGraphicsKeys = [
         { 'key': 'a', 'code': 176 },
         { 'key': 'b', 'code': 191 },
         { 'key': 'c', 'code': 188 },
@@ -824,7 +824,7 @@ class CbmishConsole {
         this.repeat(() => this.out(this.chr$(109.5+Math.random())), this.cols*rows-1, 0);    
     }
 
-    onclickcanvas(event: MouseEvent) {
+    private onclickcanvas(event: MouseEvent) {
         const x = Math.floor(event.offsetX / 8);
         const y = Math.floor(event.offsetY / 8);
         //console.log(`click ${x},${y}`)
@@ -837,7 +837,7 @@ class CbmishConsole {
         event.preventDefault();
     }
 
-    onmousemovecanvas(event: MouseEvent) {
+    private onmousemovecanvas(event: MouseEvent) {
         const x = Math.floor(event.offsetX / 8);
         const y = Math.floor(event.offsetY / 8);
         //console.log(`mousemove ${x},${y}`)
@@ -845,7 +845,7 @@ class CbmishConsole {
             button.checkMove(x, y);
     }
 
-    onmouseleavecanvas(event: MouseEvent) {
+    private onmouseleavecanvas(event: MouseEvent) {
         const x = Math.floor(event.offsetX / 8);
         const y = Math.floor(event.offsetY / 8);
         //console.log(`mouseleave ${x},${y}`)
