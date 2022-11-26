@@ -6,9 +6,9 @@ const mainMenu = function() {
     cbm.hideCursor();
 
     const x=15;
-    let y=10; 
+    let y=6;
     cbm.locate(x, y);
-    const b1 = cbm.addButton("Colors ");
+    const b1 = cbm.addButton("Colors  ");
     b1.onclick = () => {
         setTimeout(
             () => {
@@ -21,7 +21,7 @@ const mainMenu = function() {
     }
 
     cbm.locate(x, y+=3);
-    const b2 = cbm.addButton("chr$()s");
+    const b2 = cbm.addButton("chr$()s ");
     b2.onclick = () => {
         setTimeout(
             () => { 
@@ -33,7 +33,7 @@ const mainMenu = function() {
     }
 
     cbm.locate(x, y+=3);
-    const b3 = cbm.addButton("Petscii");
+    const b3 = cbm.addButton("Petscii ");
     b3.onclick = () => {
         setTimeout(
             () => { 
@@ -45,7 +45,7 @@ const mainMenu = function() {
     }
 
     cbm.locate(x, y+=3);
-    const b4 = cbm.addButton("Maze"+cbm.chr$(109)+cbm.chr$(110)+cbm.chr$(109));
+    const b4 = cbm.addButton("Maze"+cbm.chr$(110)+cbm.chr$(109)+cbm.chr$(110)+cbm.chr$(109));
     b4.onclick = () => {
         setTimeout(
             () => { 
@@ -54,6 +54,19 @@ const mainMenu = function() {
                 addleave();
                 cbm.locate(0, 6);
                 cbm.maze(19); 
+            }, 250);
+    }
+
+    cbm.locate(x, y+=3);
+    const b5 = cbm.addButton("Keyboard");
+    b5.onclick = () => {
+        setTimeout(
+            () => {
+                cbm.removeButtons();
+                cbm.fg = 1;
+                addleave();
+                cbm.keyboardChart();
+                cbm.redrawButtons();
             }, 250);
     }
 
