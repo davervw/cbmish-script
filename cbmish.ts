@@ -830,7 +830,8 @@ class CbmishConsole {
         //console.log(`click ${x},${y}`)
         let found = false;
         for (let button of this.buttons)
-            found = found || button.checkClick(x, y);
+            if (button.checkClick(x, y))
+                found = true;
         if (!found)
             this.locate(x, y);
         event.preventDefault();
@@ -977,19 +978,12 @@ class CbmishConsole {
     }
 
     public findButton(text: string): any {
-        let i: number = 0;
-        while (i < this.buttons.length && this.buttons[i].text !== text) 
-            ++i;
-        if (i < this.buttons.length)
-            return this.buttons[i];
-        return undefined;
+        return this.buttons.find(button => button.text == text);
     }
 
     public removeButton(button: any) {
-        let i: number = 0;
-        while (i < this.buttons.length && this.buttons[i] !== button) 
-            ++i;
-        if (i < this.buttons.length) {
+        let i = this.buttons.findIndex(x => x === button);
+        if (i >= 0) {
             // remove from screen
             for (let y = button.top; y < button.bottom; ++y) {
                 for (let x = button.left; x < button.right; ++x) {

@@ -15,7 +15,7 @@ Hosted at github.io: [Live Trial](https://davervw.github.io/cbmish-script/)
 
 To build the JavaScript .js files referenced by index.html, use tsc (TypeScript compiler), available via npm, and can run in the background
 
-    tsc -w cbmish.ts c64font.ts sample.ts
+    tsc --build --watch .
 
 ## Sample ##
 

@@ -766,7 +766,8 @@ var CbmishConsole = /** @class */ (function () {
         var found = false;
         for (var _i = 0, _a = this.buttons; _i < _a.length; _i++) {
             var button = _a[_i];
-            found = found || button.checkClick(x, y);
+            if (button.checkClick(x, y))
+                found = true;
         }
         if (!found)
             this.locate(x, y);
@@ -908,18 +909,11 @@ var CbmishConsole = /** @class */ (function () {
         return button;
     };
     CbmishConsole.prototype.findButton = function (text) {
-        var i = 0;
-        while (i < this.buttons.length && this.buttons[i].text !== text)
-            ++i;
-        if (i < this.buttons.length)
-            return this.buttons[i];
-        return undefined;
+        return this.buttons.find(function (button) { return button.text == text; });
     };
     CbmishConsole.prototype.removeButton = function (button) {
-        var i = 0;
-        while (i < this.buttons.length && this.buttons[i] !== button)
-            ++i;
-        if (i < this.buttons.length) {
+        var i = this.buttons.findIndex(function (x) { return x === button; });
+        if (i >= 0) {
             // remove from screen
             for (var y = button.top; y < button.bottom; ++y) {
                 for (var x = button.left; x < button.right; ++x) {
