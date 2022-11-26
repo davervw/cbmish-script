@@ -26,7 +26,7 @@ class CbmishConsole {
 
     private canvas: any = document.getElementById("screen");
     private rows = Math.floor(this.canvas.getAttribute('height') / 8);
-    private cols = Math.floor(this.canvas.getAttribute('width') / 8);   
+    private cols = Math.floor(this.canvas.getAttribute('width') / 8);
     private ctx = this.canvas?.getContext("2d");
     private imgData = this.ctx.getImageData(0, 0, this.cols*8, this.rows*8);
     private bitmap = this.imgData.data;
@@ -46,7 +46,7 @@ class CbmishConsole {
         [64, 64, 192, 255],   // [6] blue
         [255, 255, 128, 255], // [7] yellow
         [240, 128, 0, 255],   // [8] orange
-        [128, 64, 0, 255],    // [9] brown  
+        [128, 64, 0, 255],    // [9] brown
         [255, 128, 128, 255], // [10] lt red
         [64, 64, 64, 255],    // [11] dk gray
         [128, 128, 128, 255], // [12] med gray
@@ -110,12 +110,12 @@ class CbmishConsole {
         this.out('\r    **** HTML/CSS/TYPESCRIPT ****\r');
         this.out('   github.com/davervw/cbmish-script\r\r');
         this.out(' 1GB RAM SYSTEM  1073741824 BYTES FREE\r\r');
-        this.out('READY.\r');    
+        this.out('READY.\r');
         this.blinkCursor();
         this.foreground(1);
     }
 
-    public out(obj: any) {        
+    public out(obj: any) {
         if (obj == null)
             return;
 
@@ -123,16 +123,17 @@ class CbmishConsole {
 
         const s = obj.toString();
         for (let i = 0; i < s.length; ++i)
-            this.outChar(s.charAt(i)); 
-        
+            this.outChar(s.charAt(i));
+
         if (wasBlinking)
             this.blinkCursor();
     }
 
     private outChar(s: string) {
-        if (s.length != 1) throw "expected string of exactly one character";
+        if (s.length != 1)
+            throw "expected string of exactly one character";
+
         const c = s.charCodeAt(0);
-        
         let petscii: number|null = null;
 
         if (c >= 0xee00 && c <= 0xefff) {
@@ -169,7 +170,7 @@ class CbmishConsole {
             if (c == 157) {
                 this.left();
                 return;
-            }           
+            }
             if (c == 17) {
                 this.down();
                 return;
@@ -208,7 +209,7 @@ class CbmishConsole {
 
         const chardata = c64_char_rom.slice(i, i+8);
 
-        this.drawC64Char(chardata, this.col*8, this.row*8, this.fg);
+        this.drawChar(chardata, this.col, this.row, this.fg);
 
         if (++this.col >= this.cols) {
             this.col = 0;
@@ -221,14 +222,14 @@ class CbmishConsole {
 
     public newLine() {
         let wasBlinking = this.hideCursor();
-        
+
         if (++this.row >= this.rows) {
             this.row = this.rows-1;
             this.scrollScreen();
         }
         this.col = 0;
         this.reverse = false;
-        
+
         if (wasBlinking)
             this.blinkCursor();
     }
@@ -243,7 +244,7 @@ class CbmishConsole {
                 if (noMove)
                     return;
             }
-            
+
             let offset = this.row * this.cols;
             let dest = this.col;
             for (let i=dest; i<this.cols-1; ++i) {
@@ -279,9 +280,8 @@ class CbmishConsole {
 
     public clear() {
         let wasBlinking = this.hideCursor();
-        if (this.buttons.length > 0)
-            this.eraseButtons();
-        
+        this.eraseButtons();
+
         this.homeScreen();
         const limit = this.rows * this.cols - 1; // one less to avoid scroll
 	    for (let i=0; i<limit; ++i)
@@ -289,9 +289,8 @@ class CbmishConsole {
         this.poke(1024 + limit, 32);
         this.poke(13.5 * 4096 + limit, this.fg);
 	    this.homeScreen();
-        
-        if (this.buttons.length> 0)
-            this.redrawButtons();
+
+        this.redrawButtons();
         if (wasBlinking)
             this.blinkCursor();
     }
@@ -411,12 +410,12 @@ class CbmishConsole {
             if (c >= 64 && c <= 95) return c-64; // @ABC...Z[\]_
             if (c >= 97 && c <= 96+26) return c-96; // TODO: graphics
         }
-        return 32;        
+        return 32;
     }
 
     public poke(address: number, value: number) {
         let wasBlinking = this.hideCursor();
-        
+
         if (address >= 1024 && address < 1024+this.rows*this.cols)
             this.pokeScreen(address, value);
         else if (address >= 13.5*4096 && address < 13.5*4096+this.rows*this.cols) {
@@ -429,7 +428,7 @@ class CbmishConsole {
             this.border(value & 15);
         else if (address = 53281)
             this.background(value & 15);
-        
+
         if (wasBlinking)
             this.blinkCursor();
     }
@@ -449,11 +448,13 @@ class CbmishConsole {
 
         const chardata = c64_char_rom.slice(i, i+8);
 
-        this.drawC64Char(chardata, col*8, row*8, this.colorCells[address - 1024]);
+        this.drawChar(chardata, col, row, this.colorCells[address - 1024]);
     }
 
-    drawC64Char(chardata: number[], x: number, y: number, fg: number) {
+    public drawChar(chardata: number[], col: number, row: number, fg: number) {
         fg = fg & 0xF;
+        const x = col*8;
+        const y = row*8;
 
         for (let r = 0; r < 8; ++r) {
           for (let b = 0; b < 8; ++b) {
@@ -468,9 +469,9 @@ class CbmishConsole {
               this.bitmap[j + 3] = 0; // set alpha component to transparent
           }
         }
-      
+
         requestAnimationFrame(() => this.animationCallback());
-      
+
         if (this.dirtywidth == 0 && this.dirtyheight == 0) {
           this.dirtyx = x;
           this.dirtyy = y;
@@ -478,7 +479,7 @@ class CbmishConsole {
           this.dirtyheight = 8;
           return;
         }
-      
+
         if (x < this.dirtyx) {
           this.dirtywidth += this.dirtyx - x;
           this.dirtyx = x;
@@ -490,15 +491,14 @@ class CbmishConsole {
         } else if (y+8 > this.dirtyy + this.dirtyheight)
           this.dirtyheight += (y+8 - (this.dirtyy + this.dirtyheight));
     }
-    
-    scrollScreen() {
-        if (this.buttons.length > 0)
-            this.eraseButtons();
+
+    private scrollScreen() {
+        this.eraseButtons();
 
         // remove top line of screen from memory
         this.charCells.splice(0, this.cols);
         this.colorCells.splice(0, this.cols);
-        
+
         // add back empty last line in memory
         for (let i=0; i<this.cols; ++i) {
             this.charCells.push(32);
@@ -508,8 +508,7 @@ class CbmishConsole {
         // redraw from char/color cells memory
         this.redraw();
 
-        if (this.buttons.length > 0)
-            this.redrawButtons();
+        this.redrawButtons();
     }
 
     redraw() { // redraw screen by applying color to each cell
@@ -529,7 +528,7 @@ class CbmishConsole {
         this.dirtyy = 0;
         this.dirtywidth = 0;
         this.dirtyheight = 0;
-    }      
+    }
 
     public foreground(fg: number) {
         this.fg = fg;
@@ -572,7 +571,6 @@ class CbmishConsole {
             this.cursorIntervalId = setInterval(() => this.blinkCursor(), 333);
             this.cursorBlinking = true;
         }
-        this.cursorBlinking = true;
         const offset = this.col + this.row * this.cols;
         if (this.cursorShown) {
             this.colorCells[offset] = this.cursorSaveColor;
@@ -631,7 +629,7 @@ class CbmishConsole {
                 this.right();
         } else if (key == 'Enter')
             this.newLine();
-        else if ((key == 'Backspace' || key == 'Delete') 
+        else if ((key == 'Backspace' || key == 'Delete')
                 && !shiftKey && !ctrlKey && !altKey)
             this.delete(key == 'Delete');
         else if (key == 'Insert' && !ctrlKey && !altKey
@@ -670,7 +668,7 @@ class CbmishConsole {
         } else if (key == '@' && ctrlKey && altKey && !this.tabPressed)
             this.out(this.chr$(186));
         else if (key == '+' && ctrlKey && altKey && !this.tabPressed)
-            this.out(this.chr$(0x7B)); 
+            this.out(this.chr$(0x7B));
         else if (key.length == 1 && key >= 'a' && key <= 'z' && !ctrlKey && !altKey && this.tabPressed) {
             this.out(String.fromCharCode(key.charCodeAt(0)-'a'.charCodeAt(0)+1));
             return true;
@@ -716,7 +714,7 @@ class CbmishConsole {
 
     public chr$(value: number): string|undefined {
         if (value >= 0 && value <= 31)
-            return String.fromCharCode(value); // control codes        
+            return String.fromCharCode(value); // control codes
         if (value >= 128 && value <= 159)
             return String.fromCharCode(value); // shift control codes
         if (this.lowercase && value >= 'A'.charCodeAt(0) && value <= 'Z'.charCodeAt(0))
@@ -733,7 +731,7 @@ class CbmishConsole {
             return String.fromCharCode(0xee00 + value - 128 + (this.lowercase ? 256 : 0));
         if (value == 255)
             return String.fromCharCode(0xee5e + (this.lowercase ? 256 : 0)); // pi special case
-        return undefined;   
+        return undefined;
     }
 
     public locate(x: number, y: number): [number, number] {
@@ -821,7 +819,7 @@ class CbmishConsole {
         this.lowercase = false;
         this.newLine();
         this.up();
-        this.repeat(() => this.out(this.chr$(109.5+Math.random())), this.cols*rows-1, 0);    
+        this.repeat(() => this.out(this.chr$(109.5+Math.random())), this.cols*rows-1, 0);
     }
 
     private onclickcanvas(event: MouseEvent) {
@@ -856,7 +854,7 @@ class CbmishConsole {
     public addButton(text: string, context: any = undefined, rounded: boolean = true): any {
         this.lowercase = false;
 
-        const normalCorners = (rounded) 
+        const normalCorners = (rounded)
             ? ''+this.chr$(0x75)+this.chr$(0x69)+this.chr$(0x6A)+this.chr$(0x6B)
             : ''+this.chr$(0xB0)+this.chr$(0xAE)+this.chr$(0xAD)+this.chr$(0xBD);
 
@@ -908,30 +906,30 @@ class CbmishConsole {
             "bottom": this.row+3,
             "right": this.col+text.length+2,
             "checkBounds": (x:number, y:number) =>
-                (x >= button.left && x < button.right && y >= button.top && y < button.bottom),            
+                (x >= button.left && x < button.right && y >= button.top && y < button.bottom),
             "onHover": () => {
                 const wasBlinking = _cbm.hideCursor();
                 button.hovered = true;
                 let saveColor = this.fg;
                 this.fg = button.color;
-                const oldRowCol = _cbm.locate(button.left, button.top); 
-                _cbm.out(hover); 
+                const oldRowCol = _cbm.locate(button.left, button.top);
+                _cbm.out(hover);
                 this.fg = saveColor;
-                [this.row, this.col] = oldRowCol; 
-                if (wasBlinking) 
-                    _cbm.blinkCursor(); 
+                [this.row, this.col] = oldRowCol;
+                if (wasBlinking)
+                    _cbm.blinkCursor();
             },
             "onLeave": () => {
                 const wasBlinking = _cbm.hideCursor();
                 button.hovered = false;
                 let saveColor = this.fg;
                 this.fg = button.color;
-                const oldRowCol = _cbm.locate(button.left, button.top); 
-                _cbm.out(normal); 
+                const oldRowCol = _cbm.locate(button.left, button.top);
+                _cbm.out(normal);
                 this.fg = saveColor;
-                [this.row, this.col] = oldRowCol; 
-                if (wasBlinking) 
-                    _cbm.blinkCursor(); 
+                [this.row, this.col] = oldRowCol;
+                if (wasBlinking)
+                    _cbm.blinkCursor();
             },
             "checkClick": (x:number, y:number): boolean => {
                 if (button.checkBounds(x, y)) {
@@ -946,7 +944,7 @@ class CbmishConsole {
                         button.onclick();
 
                     [this.row, this.col] = oldRowCol;
-                    if (wasBlinking) 
+                    if (wasBlinking)
                         _cbm.blinkCursor();
 
                     setTimeout(() => button.onHover(), 50);
@@ -997,7 +995,7 @@ class CbmishConsole {
         }
     }
 
-    public removeButtons() {        
+    public removeButtons() {
         while (this.buttons.length > 0)
             this.removeButton(this.buttons[0]);
     }
@@ -1014,6 +1012,8 @@ class CbmishConsole {
     }
 
     public redrawButtons() {
+        if (this.buttons.length == 0)
+            return;
         const wasBlinking = this.hideCursor();
         const saveRowCol = this.locate(0, 0);
         const saveColor = this.fg;
@@ -1058,22 +1058,22 @@ class CbmishConsole {
         this.fg = saveColor;
 
         this.locate(3, 15);
-        const fore = this.addButton("Foreground");        
-        fore.onclick = () => { 
-            setter = setForeground; 
+        const fore = this.addButton("Foreground");
+        fore.onclick = () => {
+            setter = setForeground;
             redrawRadioButtons();
         }
 
         this.locate(3, 18);
         const back = this.addButton("Background");
-        back.onclick = () => { 
-            setter = setBackground; 
+        back.onclick = () => {
+            setter = setBackground;
             redrawRadioButtons();
         }
 
         this.locate(3, 21);
         const bord = this.addButton("  Border  ");
-        bord.onclick = () => { 
+        bord.onclick = () => {
             setter = setBorder;
             redrawRadioButtons();
         }
@@ -1089,7 +1089,7 @@ class CbmishConsole {
                     }
                 }
             }
-            
+
             _cbm.locate(1, fore.top+1);
             _cbm.out(_cbm.chr$((setter === setForeground) ? 0x71 : 0x77));
             _cbm.locate(fore.right+1, fore.top+1);
@@ -1099,7 +1099,7 @@ class CbmishConsole {
             _cbm.out(_cbm.chr$((setter === setBackground) ? 0x71 : 0x77));
             _cbm.locate(back.right+1, back.top+1);
             _cbm.out(_cbm.getBackground() + ' ');
-            
+
             _cbm.locate(1, bord.top+1);
             _cbm.out(_cbm.chr$((setter === setBorder) ? 0x71 : 0x77));
             _cbm.locate(bord.right+1, bord.top+1);
@@ -1147,13 +1147,13 @@ class CbmishConsole {
             _cbm.border(value);
         }
 
-        setter = setForeground; 
+        setter = setForeground;
         redrawRadioButtons();
 
         if (showExit) {
             this.locate(37, 0);
             const leave = this.addButton("X");
-            leave.onclick = () => { 
+            leave.onclick = () => {
                 setTimeout( () => {
                     eraseRadioButtons();
                     while (_cbm.buttons.length > 0)
@@ -1162,7 +1162,7 @@ class CbmishConsole {
                         _cbm.poke(13.5*4096+i, _cbm.fg);
                     [_cbm.row, _cbm.col] = saveRowCol;
                     _cbm.blinkCursor();
-                }, 250); 
+                }, 250);
             };
         }
 
@@ -1172,7 +1172,7 @@ class CbmishConsole {
 
     public keyboardChart() {
         const wasBlinking = this.hideCursor();
-        const screenCodes = JSON.parse('[27,20,257,258,29,27,14,29,61,268,271,279,261,274,259,257,275,261,47,277,272,272,261,274,259,257,275,261,32,32,32,32,32,32,32,32,32,32,32,32,27,20,257,258,29,27,19,264,265,262,276,29,27,14,29,61,277,272,272,261,274,259,257,275,261,47,263,274,257,272,264,265,259,275,32,32,32,32,32,32,27,20,257,258,29,47,27,3,61,29,43,27,49,45,56,29,61,259,271,268,271,274,275,32,57,47,48,61,18,278,275,47,15,262,262,32,32,32,32,32,67,114,67,67,114,67,67,114,67,67,114,67,67,114,67,67,114,67,67,114,67,67,114,67,67,114,67,67,114,67,67,114,67,67,114,67,67,114,67,67,32,66,49,33,66,50,0,66,51,35,66,52,36,66,53,37,66,54,30,66,55,38,66,56,42,66,57,40,66,48,41,66,45,31,66,61,43,66,2,257,32,66,32,32,66,100,122,378,32,32,66,32,32,66,32,32,66,32,94,350,32,32,66,32,32,66,32,32,66,32,32,66,92,32,66,102,91,66,259,267,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,3,66,273,17,66,279,23,66,261,5,66,274,18,66,276,20,66,281,25,66,277,21,66,265,9,66,271,15,66,272,16,66,27,32,66,29,32,66,28,66,271,66,107,81,66,371,87,66,369,69,66,370,82,66,355,84,66,375,89,66,376,85,66,354,73,66,377,79,66,367,80,66,32,32,66,32,32,66,104,32,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,113,64,64,32,66,257,1,66,403,19,66,260,4,66,262,6,66,263,7,66,264,8,66,266,10,66,267,11,66,268,12,66,59,58,66,39,34,66,5,270,276,261,274,32,66,368,65,66,366,83,66,364,68,66,379,70,66,357,71,66,372,72,66,373,74,66,353,75,66,374,76,66,32,32,66,32,32,66,32,32,32,32,32,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,113,64,64,64,64,64,19,66,282,26,66,280,24,66,259,3,66,278,22,66,258,2,66,270,14,66,269,13,66,44,60,66,46,62,66,47,63,66,32,32,32,19,264,265,262,276,264,66,365,90,66,381,88,66,380,67,66,382,86,66,383,66,66,362,78,66,359,77,66,32,32,66,32,32,66,32,32,66,32,32,32,32,32,32,32,32,64,113,64,114,113,64,64,91,64,64,113,64,64,113,64,64,113,64,64,113,64,64,113,64,64,113,64,64,91,64,64,113,114,64,64,64,114,64,64,64,3,61,32,66,3,61,32,66,32,32,32,19,32,32,16,32,32,1,32,32,3,32,32,5,32,32,32,32,66,3,61,32,66,32,32,32,66,3,61,32,32,32,32,66,32,32,32,66,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,66,32,32,32,66,32,32,32,66,32,32,32,67,67,67,113,64,64,64,113,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,113,64,64,64,113,64,64,64,113,64,64,64,27,3,61,29,61,27,1,268,276,29,272,274,261,262,261,274,274,261,260,32,27,3,276,274,268,29,275,271,269,261,276,265,269,261,275,32,32,32,32,32,27,3,20,18,12,29,61,27,20,257,258,29,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,27,19,20,15,16,43,18,5,19,20,15,18,5,29,61,27,3,276,274,268,29,43,27,2,274,261,257,267,29,32,32,32,32,32,32,32,32,32,32,32,27,19,20,15,16,29,61,27,5,275,259,29,32,27,18,5,19,20,15,18,5,29,61,27,16,257,263,261,21,272,29,32,32,32,32,32,32,32,32,32,14,261,279,32,27,3,276,274,268,29,43,27,21,272,47,4,271,279,270,47,12,261,262,276,47,18,265,263,264,276,47,8,271,269,261,47,5,270,260,29,32,32,32,32,27,5,270,260,29,32,32,32,160,387,386,397,393,403,392,160,395,389,409,386,399,385,402,388,160,402,389,390,389,402,389,398,387,389,160,32]');
+        const screenCodes = JSON.parse('[27,20,257,258,29,27,14,29,61,268,271,279,261,274,259,257,275,261,47,277,272,272,261,274,259,257,275,261,32,32,32,32,32,32,32,32,32,32,32,32,27,20,257,258,29,27,19,264,265,262,276,29,27,14,29,61,277,272,272,261,274,259,257,275,261,47,263,274,257,272,264,265,259,275,32,32,32,32,32,32,27,20,257,258,29,47,27,3,61,29,43,27,49,45,56,29,61,259,271,268,271,274,275,32,57,47,48,61,18,278,275,47,15,262,262,32,32,32,32,32,67,114,67,67,114,67,67,114,67,67,114,67,67,114,67,67,114,67,67,114,67,67,114,67,67,114,67,67,114,67,67,114,67,67,114,67,67,114,67,67,32,66,49,33,66,50,0,66,51,35,66,52,36,66,53,37,66,54,30,66,55,38,66,56,42,66,57,40,66,48,41,66,45,31,66,61,43,66,2,257,32,66,32,32,66,100,122,378,32,32,66,32,32,66,32,32,66,32,94,350,32,32,66,32,32,66,32,32,66,32,32,66,92,32,66,102,91,66,259,267,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,3,66,273,17,66,279,23,66,261,5,66,274,18,66,276,20,66,281,25,66,277,21,66,265,9,66,271,15,66,272,16,66,27,32,66,29,32,66,28,66,271,66,107,81,66,371,87,66,369,69,66,370,82,66,355,84,66,375,89,66,376,85,66,354,73,66,377,79,66,367,80,66,32,32,66,32,32,66,104,32,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,113,64,64,32,66,257,1,66,275,19,66,260,4,66,262,6,66,263,7,66,264,8,66,266,10,66,267,11,66,268,12,66,59,58,66,39,34,66,5,270,276,261,274,32,66,368,65,66,366,83,66,364,68,66,379,70,66,357,71,66,372,72,66,373,74,66,353,75,66,374,76,66,32,32,66,32,32,66,32,32,32,32,32,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,91,64,64,113,64,64,64,64,64,19,66,282,26,66,280,24,66,259,3,66,278,22,66,258,2,66,270,14,66,269,13,66,44,60,66,46,62,66,47,63,66,32,32,32,19,264,265,262,276,264,66,365,90,66,381,88,66,380,67,66,382,86,66,383,66,66,362,78,66,359,77,66,32,32,66,32,32,66,32,32,66,32,32,32,32,32,32,32,32,64,113,64,114,113,64,64,91,64,64,113,64,64,113,64,64,113,64,64,113,64,64,113,64,64,113,64,64,91,64,64,113,114,64,64,64,114,64,64,64,3,61,32,66,3,61,32,66,32,32,32,19,32,32,16,32,32,1,32,32,3,32,32,5,32,32,32,32,66,3,61,32,66,32,32,32,66,3,61,32,32,32,32,66,32,32,32,66,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,66,32,32,32,66,32,32,32,66,32,32,32,67,67,67,113,64,64,64,113,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,113,64,64,64,113,64,64,64,113,64,64,64,27,3,61,29,61,27,1,268,276,29,272,274,261,262,261,274,274,261,260,32,27,3,276,274,268,29,275,271,269,261,276,265,269,261,275,32,32,32,32,32,27,3,20,18,12,29,61,27,20,257,258,29,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,27,19,20,15,16,43,18,5,19,20,15,18,5,29,61,27,3,276,274,268,29,43,27,2,274,261,257,267,29,32,32,32,32,32,32,32,32,32,32,32,27,19,20,15,16,29,61,27,5,275,259,29,32,27,18,5,19,20,15,18,5,29,61,27,16,257,263,261,21,272,29,32,32,32,32,32,32,32,32,32,14,261,279,32,27,3,276,274,268,29,43,27,21,272,47,4,271,279,270,47,12,261,262,276,47,18,265,263,264,276,47,8,271,269,261,47,5,270,260,29,32,32,32,32,27,5,270,260,29,32,32,32,160,387,386,397,393,403,392,160,395,389,409,386,399,385,402,388,160,402,389,390,389,402,389,398,387,389,160,32]');
         this.clear();
         for (let y=0; y<25; ++y) {
             for (let x=0; x<40; ++x) {
