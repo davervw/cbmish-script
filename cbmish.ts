@@ -569,7 +569,7 @@ class CbmishConsole {
 
     public blinkCursor() {
         if (!this.cursorBlinking) {
-            this.cursorIntervalId = setInterval(() => this.blinkCursor(), 500);
+            this.cursorIntervalId = setInterval(() => this.blinkCursor(), 333);
             this.cursorBlinking = true;
         }
         this.cursorBlinking = true;

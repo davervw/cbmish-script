@@ -493,7 +493,7 @@ var CbmishConsole = /** @class */ (function () {
     CbmishConsole.prototype.blinkCursor = function () {
         var _this = this;
         if (!this.cursorBlinking) {
-            this.cursorIntervalId = setInterval(function () { return _this.blinkCursor(); }, 500);
+            this.cursorIntervalId = setInterval(function () { return _this.blinkCursor(); }, 333);
             this.cursorBlinking = true;
         }
         this.cursorBlinking = true;
