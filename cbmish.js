@@ -1085,8 +1085,8 @@ var CbmishConsole = /** @class */ (function () {
             for (var x = 0; x < 40; ++x) {
                 var src = x + y * 40;
                 var dest = x + y * this.cols;
-                cbm.charCells[dest] = screenCodes[src];
-                cbm.poke(13.5 * 4096 + dest, (y < 3 || y > 18) ? 15 : 1);
+                this.charCells[dest] = screenCodes[src];
+                this.poke(13.5 * 4096 + dest, (y < 3 || y > 18) ? 15 : 1);
             }
         }
         if (wasBlinking)
