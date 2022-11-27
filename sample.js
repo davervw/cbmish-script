@@ -63,19 +63,33 @@ var mainMenu = function () {
             cbm.redrawButtons();
         }, 250);
     };
+    cbm.locate(x, y += 3);
+    cbm.fg = 15;
+    var b6 = cbm.addButton("About   ");
+    b6.onclick = function () {
+        setTimeout(function () {
+            cbm.removeButtons();
+            cbm.fg = 1;
+            cbm.aboutCbmish();
+            addleave();
+        }, 250);
+    };
     cbm.locate(0, 7);
     cbm.foreground(14);
     cbm.blinkCursor();
 };
 var addleave = function () {
+    var saveColor = cbm.fg;
     cbm.foreground(1);
-    cbm.locate(37, 0);
+    var saveRowCol = cbm.locate(37, 0);
     var leave = cbm.addButton("X");
     leave.onclick = function () {
         var _cbm = cbm;
         _cbm.escapePressed = true;
         onleave();
     };
+    cbm.fg = saveColor;
+    cbm.locate(saveRowCol[1], saveRowCol[0]);
 };
 var onleave = function () {
     setTimeout(function () {

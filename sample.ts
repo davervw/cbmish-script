@@ -75,20 +75,36 @@ const mainMenu = function() {
             }, 250);
     }
 
+    cbm.locate(x, y+=3);
+    cbm.fg = 15;
+    const b6 = cbm.addButton("About   ");
+    b6.onclick = () => {
+        setTimeout(
+            () => {
+                cbm.removeButtons();
+                cbm.fg = 1;
+                cbm.aboutCbmish();
+                addleave();
+            }, 250);
+    }
+
     cbm.locate(0, 7);
     cbm.foreground(14);
     cbm.blinkCursor();
 }
 
 const addleave = function () {
+    const saveColor = cbm.fg;
     cbm.foreground(1);
-    cbm.locate(37, 0);
+    const saveRowCol = cbm.locate(37, 0);
     const leave = cbm.addButton("X");
     leave.onclick = () => { 
         let _cbm:any = cbm; 
         _cbm.escapePressed=true; 
         onleave(); 
     }
+    cbm.fg = saveColor;
+    cbm.locate(saveRowCol[1], saveRowCol[0]);
 }
 
 const onleave = function () {

@@ -12,10 +12,12 @@ class CbmishConsole {
     fg = 14;
     private bg = 6;
     private bd = 14;
+    private ul = this.fg;
     private row = 0;
     private col = 0;
     lowercase: boolean = true;
     reverse: boolean = false;
+    underlined: boolean = false;
     private cursorBlinking: boolean = false;
     private cursorShown: boolean = false;
     private cursorSaveColor: number;
@@ -103,12 +105,17 @@ class CbmishConsole {
         this.hideCursor();
         this.reverse = false;
         this.lowercase = true;
+        this.underlined = false;
         this.border(14);
         this.background(6);
         this.foreground(14);
 	    this.clear();
         this.out('\r    **** HTML/CSS/TYPESCRIPT ****\r');
-        this.out('   github.com/davervw/cbmish-script\r\r');
+        this.out('   ');
+        const link = 'github.com/davervw/cbmish-script';
+        this.ul = 15;
+        this.addLink(link, 'https://'+link);
+        this.out('\r\r');
         this.out(' 1GB RAM SYSTEM  1073741824 BYTES FREE\r\r');
         this.out('READY.\r');
         this.blinkCursor();
@@ -157,6 +164,14 @@ class CbmishConsole {
             }
             if (c == 146) {
                 this.reverse = false;
+                return;
+            }
+            if (c == 2) {
+                this.underlined = true;
+                return;
+            }
+            if (c == 130) {
+                this.underlined = false;
                 return;
             }
             if (c == 19) {
@@ -209,7 +224,7 @@ class CbmishConsole {
 
         const chardata = c64_char_rom.slice(i, i+8);
 
-        this.drawChar(chardata, this.col, this.row, this.fg);
+        this.drawChar(chardata, this.col, this.row, this.fg, this.underlined && !this.reverse, this.ul);
 
         if (++this.col >= this.cols) {
             this.col = 0;
@@ -229,6 +244,7 @@ class CbmishConsole {
         }
         this.col = 0;
         this.reverse = false;
+        this.underlined = false;
 
         if (wasBlinking)
             this.blinkCursor();
@@ -448,10 +464,10 @@ class CbmishConsole {
 
         const chardata = c64_char_rom.slice(i, i+8);
 
-        this.drawChar(chardata, col, row, this.colorCells[address - 1024]);
+        this.drawChar(chardata, col, row, this.colorCells[address - 1024], false, 0);
     }
 
-    public drawChar(chardata: number[], col: number, row: number, fg: number) {
+    public drawChar(chardata: number[], col: number, row: number, fg: number, underlined: boolean, ul: number) {
         fg = fg & 0xF;
         const x = col*8;
         const y = row*8;
@@ -465,8 +481,13 @@ class CbmishConsole {
               this.bitmap[j + 2] = this.palette[fg][2];
               this.bitmap[j + 3] = this.palette[fg][3];
             }
-            else
-              this.bitmap[j + 3] = 0; // set alpha component to transparent
+            else if (underlined && r == 7) {
+                this.bitmap[j + 0] = this.palette[ul][0];
+                this.bitmap[j + 1] = this.palette[ul][1];
+                this.bitmap[j + 2] = this.palette[ul][2];
+                this.bitmap[j + 3] = this.palette[ul][3];
+              } else
+                this.bitmap[j + 3] = 0; // set alpha component to transparent
           }
         }
 
@@ -552,6 +573,14 @@ class CbmishConsole {
 
     public getBorder() {
         return this.bd;
+    }
+
+    public underline(color: number) {
+        this.ul = color;
+    }
+
+    public getUnderline() {
+        return this.ul;
     }
 
     public hideCursor(): boolean {
@@ -851,7 +880,7 @@ class CbmishConsole {
             button.checkLeave();
     }
 
-    public addButton(text: string, context: any = undefined, rounded: boolean = true): any {
+    public addButton(text: string, context: any = undefined, rounded: boolean = true, draw: boolean = true): any {
         this.lowercase = false;
 
         const normalCorners = (rounded)
@@ -890,7 +919,8 @@ class CbmishConsole {
         for (let i=1; i<=text.length+2; ++i)
             hover += '\x9D';
 
-        this.out(normal);
+        if (draw)
+            this.out(normal);
 
         let _cbm = this;
 
@@ -913,7 +943,7 @@ class CbmishConsole {
                 let saveColor = this.fg;
                 this.fg = button.color;
                 const oldRowCol = _cbm.locate(button.left, button.top);
-                _cbm.out(hover);
+                _cbm.out(button.hover);
                 this.fg = saveColor;
                 [this.row, this.col] = oldRowCol;
                 if (wasBlinking)
@@ -925,7 +955,7 @@ class CbmishConsole {
                 let saveColor = this.fg;
                 this.fg = button.color;
                 const oldRowCol = _cbm.locate(button.left, button.top);
-                _cbm.out(normal);
+                _cbm.out(button.normal);
                 this.fg = saveColor;
                 [this.row, this.col] = oldRowCol;
                 if (wasBlinking)
@@ -937,7 +967,7 @@ class CbmishConsole {
                     let saveColor = this.fg;
                     this.fg = button.color;
                     const oldRowCol = _cbm.locate(button.left, button.top);
-                    _cbm.out(normal);
+                    _cbm.out(button.normal);
                     this.fg = saveColor;
 
                     if (button.onclick != null)
@@ -972,6 +1002,17 @@ class CbmishConsole {
 
         this.buttons.push(button);
 
+        return button;
+    }
+
+    public addLink(text: string, link: string) {
+        const button = this.addButton(text, link, false, false);
+        button.bottom = button.top+1;
+        button.right = button.left + text.length;
+        button.normal = this.chr$(14)+this.chr$(2)+text+this.chr$(130);
+        this.out(button.normal);
+        button.hover = this.chr$(14)+this.chr$(18)+text+this.chr$(146);
+        button.onclick = () => window.open(button.context);
         return button;
     }
 
@@ -1064,6 +1105,13 @@ class CbmishConsole {
             redrawRadioButtons();
         }
 
+        this.locate(24, 15);
+        const under = this.addButton("Underline");
+        under.onclick = () => {
+            setter = setUnderline;
+            redrawRadioButtons();
+        }
+
         this.locate(3, 18);
         const back = this.addButton("Background");
         back.onclick = () => {
@@ -1089,21 +1137,27 @@ class CbmishConsole {
                     }
                 }
             }
+            this.redrawButtons();
 
-            _cbm.locate(1, fore.top+1);
+            _cbm.locate(fore.left-2, fore.top+1);
             _cbm.out(_cbm.chr$((setter === setForeground) ? 0x71 : 0x77));
             _cbm.locate(fore.right+1, fore.top+1);
             _cbm.out(fore.color + ' ');
 
-            _cbm.locate(1, back.top+1);
+            _cbm.locate(back.left-2, back.top+1);
             _cbm.out(_cbm.chr$((setter === setBackground) ? 0x71 : 0x77));
             _cbm.locate(back.right+1, back.top+1);
             _cbm.out(_cbm.getBackground() + ' ');
 
-            _cbm.locate(1, bord.top+1);
+            _cbm.locate(bord.left-2, bord.top+1);
             _cbm.out(_cbm.chr$((setter === setBorder) ? 0x71 : 0x77));
             _cbm.locate(bord.right+1, bord.top+1);
             _cbm.out(_cbm.getBorder() + ' ');
+
+            _cbm.locate(under.left-2, under.top+1);
+            _cbm.out(_cbm.chr$((setter === setUnderline) ? 0x71 : 0x77));
+            _cbm.locate(under.right+1, under.top+1);
+            _cbm.out(_cbm.getUnderline() + ' ');
         };
 
         let eraseRadioButtons = () => {
@@ -1127,16 +1181,9 @@ class CbmishConsole {
             _cbm.foreground(value);
 
             fore.color = value;
-            _cbm.locate(fore.left, fore.top);
-            _cbm.out(fore.normal);
-
             back.color = value;
-            _cbm.locate(back.left, back.top);
-            _cbm.out(back.normal);
-
             bord.color = value;
-            _cbm.locate(bord.left, bord.top);
-            _cbm.out(bord.normal);
+            under.color = value;
         };
 
         let setBackground = function(value: number) {
@@ -1145,6 +1192,10 @@ class CbmishConsole {
 
         let setBorder = function(value: number) {
             _cbm.border(value);
+        }
+
+        let setUnderline = function(value: number) {
+            _cbm.underline(value);
         }
 
         setter = setForeground;
@@ -1184,5 +1235,39 @@ class CbmishConsole {
         }
         if (wasBlinking)
             this.blinkCursor();
+    }
+
+    public aboutCbmish() {
+        this.lowercase = true;
+        this.hideCursor();
+        this.border(0);
+        this.background(11);
+        this.foreground(15);
+        this.clear();
+        this.foreground(1);
+        this.out('cbmish-script');
+        this.foreground(15);
+        this.out(' is a TypeScript module\r'
+            + 'for displaying content that looks\r'
+            + 'like a famous 8-bit console we love\r'
+            + 'by display the PETSCII characters in\r'
+            + 'familiar colors and patterns\r'
+            + '\r'
+            + 'The purpose is to be able to render\r'
+            + 'various web content with this look &\r'
+            + 'feel to retain the retro vibe, yet also\r'
+            + 'enable modern programming languages like'
+            + 'TypeScript.\r'
+            + '\r'
+            + 'Open source:\r');
+        this.foreground(14);
+        this.out('  ');
+        const link = 'github.com/davervw/cbmish-script';
+        this.ul = 15;
+        this.addLink(link, 'https://'+link);
+        this.out('\r');
+        this.foreground(15);
+        this.locate(this.cols - 1, this.rows - 1);
+        this.blinkCursor();
     }
 }

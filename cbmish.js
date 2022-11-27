@@ -13,10 +13,12 @@ var CbmishConsole = /** @class */ (function () {
         this.fg = 14;
         this.bg = 6;
         this.bd = 14;
+        this.ul = this.fg;
         this.row = 0;
         this.col = 0;
         this.lowercase = true;
         this.reverse = false;
+        this.underlined = false;
         this.cursorBlinking = false;
         this.cursorShown = false;
         this.escapePressed = false;
@@ -46,7 +48,7 @@ var CbmishConsole = /** @class */ (function () {
             [128, 128, 128, 255],
             [160, 255, 160, 255],
             [96, 128, 240, 255],
-            [192, 192, 192, 255],
+            [192, 192, 192, 255], // [15] lt gray
         ];
         this.cbmGraphicsKeys = [
             { 'key': 'a', 'code': 176 },
@@ -97,12 +99,17 @@ var CbmishConsole = /** @class */ (function () {
         this.hideCursor();
         this.reverse = false;
         this.lowercase = true;
+        this.underlined = false;
         this.border(14);
         this.background(6);
         this.foreground(14);
         this.clear();
         this.out('\r    **** HTML/CSS/TYPESCRIPT ****\r');
-        this.out('   github.com/davervw/cbmish-script\r\r');
+        this.out('   ');
+        var link = 'github.com/davervw/cbmish-script';
+        this.ul = 15;
+        this.addLink(link, 'https://' + link);
+        this.out('\r\r');
         this.out(' 1GB RAM SYSTEM  1073741824 BYTES FREE\r\r');
         this.out('READY.\r');
         this.blinkCursor();
@@ -145,6 +152,14 @@ var CbmishConsole = /** @class */ (function () {
             }
             if (c == 146) {
                 this.reverse = false;
+                return;
+            }
+            if (c == 2) {
+                this.underlined = true;
+                return;
+            }
+            if (c == 130) {
+                this.underlined = false;
                 return;
             }
             if (c == 19) {
@@ -191,7 +206,7 @@ var CbmishConsole = /** @class */ (function () {
         this.charCells[this.col + this.row * this.cols] = petscii;
         this.colorCells[this.col + this.row * this.cols] = this.fg;
         var chardata = c64_char_rom.slice(i, i + 8);
-        this.drawChar(chardata, this.col, this.row, this.fg);
+        this.drawChar(chardata, this.col, this.row, this.fg, this.underlined && !this.reverse, this.ul);
         if (++this.col >= this.cols) {
             this.col = 0;
             if (++this.row >= this.rows) {
@@ -208,6 +223,7 @@ var CbmishConsole = /** @class */ (function () {
         }
         this.col = 0;
         this.reverse = false;
+        this.underlined = false;
         if (wasBlinking)
             this.blinkCursor();
     };
@@ -386,9 +402,9 @@ var CbmishConsole = /** @class */ (function () {
         var col = (address - 1024) % this.cols;
         var row = Math.floor((address - 1024) / this.cols);
         var chardata = c64_char_rom.slice(i, i + 8);
-        this.drawChar(chardata, col, row, this.colorCells[address - 1024]);
+        this.drawChar(chardata, col, row, this.colorCells[address - 1024], false, 0);
     };
-    CbmishConsole.prototype.drawChar = function (chardata, col, row, fg) {
+    CbmishConsole.prototype.drawChar = function (chardata, col, row, fg, underlined, ul) {
         var _this = this;
         fg = fg & 0xF;
         var x = col * 8;
@@ -401,6 +417,12 @@ var CbmishConsole = /** @class */ (function () {
                     this.bitmap[j + 1] = this.palette[fg][1];
                     this.bitmap[j + 2] = this.palette[fg][2];
                     this.bitmap[j + 3] = this.palette[fg][3];
+                }
+                else if (underlined && r == 7) {
+                    this.bitmap[j + 0] = this.palette[ul][0];
+                    this.bitmap[j + 1] = this.palette[ul][1];
+                    this.bitmap[j + 2] = this.palette[ul][2];
+                    this.bitmap[j + 3] = this.palette[ul][3];
                 }
                 else
                     this.bitmap[j + 3] = 0; // set alpha component to transparent
@@ -463,7 +485,7 @@ var CbmishConsole = /** @class */ (function () {
     };
     CbmishConsole.prototype.background = function (bg) {
         var canvas = document.getElementsByTagName('canvas');
-        canvas[1].outerHTML = "<canvas class=\"background background" + (bg & 0xF) + "\"></canvas>";
+        canvas[1].outerHTML = "<canvas class=\"background background".concat((bg & 0xF), "\"></canvas>");
         this.bg = bg;
     };
     CbmishConsole.prototype.getBackground = function () {
@@ -471,11 +493,17 @@ var CbmishConsole = /** @class */ (function () {
     };
     CbmishConsole.prototype.border = function (color) {
         var canvas = document.getElementsByTagName('canvas');
-        canvas[0].outerHTML = "<canvas class=\"border border" + (color & 0xF) + "\"></canvas>";
+        canvas[0].outerHTML = "<canvas class=\"border border".concat((color & 0xF), "\"></canvas>");
         this.bd = color;
     };
     CbmishConsole.prototype.getBorder = function () {
         return this.bd;
+    };
+    CbmishConsole.prototype.underline = function (color) {
+        this.ul = color;
+    };
+    CbmishConsole.prototype.getUnderline = function () {
+        return this.ul;
     };
     CbmishConsole.prototype.hideCursor = function () {
         var wasBlinking = this.cursorBlinking;
@@ -788,10 +816,11 @@ var CbmishConsole = /** @class */ (function () {
             button.checkLeave();
         }
     };
-    CbmishConsole.prototype.addButton = function (text, context, rounded) {
+    CbmishConsole.prototype.addButton = function (text, context, rounded, draw) {
         var _this = this;
         if (context === void 0) { context = undefined; }
         if (rounded === void 0) { rounded = true; }
+        if (draw === void 0) { draw = true; }
         this.lowercase = false;
         var normalCorners = (rounded)
             ? '' + this.chr$(0x75) + this.chr$(0x69) + this.chr$(0x6A) + this.chr$(0x6B)
@@ -826,7 +855,8 @@ var CbmishConsole = /** @class */ (function () {
         hover += '\x92' + this.chr$(0xBE) + '\x91\x91';
         for (var i = 1; i <= text.length + 2; ++i)
             hover += '\x9D';
-        this.out(normal);
+        if (draw)
+            this.out(normal);
         var _cbm = this;
         var button = {
             "text": text,
@@ -848,7 +878,7 @@ var CbmishConsole = /** @class */ (function () {
                 var saveColor = _this.fg;
                 _this.fg = button.color;
                 var oldRowCol = _cbm.locate(button.left, button.top);
-                _cbm.out(hover);
+                _cbm.out(button.hover);
                 _this.fg = saveColor;
                 _this.row = oldRowCol[0], _this.col = oldRowCol[1];
                 if (wasBlinking)
@@ -860,7 +890,7 @@ var CbmishConsole = /** @class */ (function () {
                 var saveColor = _this.fg;
                 _this.fg = button.color;
                 var oldRowCol = _cbm.locate(button.left, button.top);
-                _cbm.out(normal);
+                _cbm.out(button.normal);
                 _this.fg = saveColor;
                 _this.row = oldRowCol[0], _this.col = oldRowCol[1];
                 if (wasBlinking)
@@ -872,7 +902,7 @@ var CbmishConsole = /** @class */ (function () {
                     var saveColor = _this.fg;
                     _this.fg = button.color;
                     var oldRowCol = _cbm.locate(button.left, button.top);
-                    _cbm.out(normal);
+                    _cbm.out(button.normal);
                     _this.fg = saveColor;
                     if (button.onclick != null)
                         button.onclick();
@@ -899,10 +929,20 @@ var CbmishConsole = /** @class */ (function () {
                     button.onLeave();
             },
             "onclick": function () {
-                console.log("onClick: " + button.text);
+                console.log("onClick: ".concat(button.text));
             }
         };
         this.buttons.push(button);
+        return button;
+    };
+    CbmishConsole.prototype.addLink = function (text, link) {
+        var button = this.addButton(text, link, false, false);
+        button.bottom = button.top + 1;
+        button.right = button.left + text.length;
+        button.normal = this.chr$(14) + this.chr$(2) + text + this.chr$(130);
+        this.out(button.normal);
+        button.hover = this.chr$(14) + this.chr$(18) + text + this.chr$(146);
+        button.onclick = function () { return window.open(button.context); };
         return button;
     };
     CbmishConsole.prototype.findButton = function (text) {
@@ -958,6 +998,7 @@ var CbmishConsole = /** @class */ (function () {
             this.blinkCursor();
     };
     CbmishConsole.prototype.colorPicker = function (showExit) {
+        var _this = this;
         if (showExit === void 0) { showExit = true; }
         var _cbm = this;
         var saveRowCol = [this.row, this.col];
@@ -989,6 +1030,12 @@ var CbmishConsole = /** @class */ (function () {
             setter = setForeground;
             redrawRadioButtons();
         };
+        this.locate(24, 15);
+        var under = this.addButton("Underline");
+        under.onclick = function () {
+            setter = setUnderline;
+            redrawRadioButtons();
+        };
         this.locate(3, 18);
         var back = this.addButton("Background");
         back.onclick = function () {
@@ -1011,18 +1058,23 @@ var CbmishConsole = /** @class */ (function () {
                     }
                 }
             }
-            _cbm.locate(1, fore.top + 1);
+            _this.redrawButtons();
+            _cbm.locate(fore.left - 2, fore.top + 1);
             _cbm.out(_cbm.chr$((setter === setForeground) ? 0x71 : 0x77));
             _cbm.locate(fore.right + 1, fore.top + 1);
             _cbm.out(fore.color + ' ');
-            _cbm.locate(1, back.top + 1);
+            _cbm.locate(back.left - 2, back.top + 1);
             _cbm.out(_cbm.chr$((setter === setBackground) ? 0x71 : 0x77));
             _cbm.locate(back.right + 1, back.top + 1);
             _cbm.out(_cbm.getBackground() + ' ');
-            _cbm.locate(1, bord.top + 1);
+            _cbm.locate(bord.left - 2, bord.top + 1);
             _cbm.out(_cbm.chr$((setter === setBorder) ? 0x71 : 0x77));
             _cbm.locate(bord.right + 1, bord.top + 1);
             _cbm.out(_cbm.getBorder() + ' ');
+            _cbm.locate(under.left - 2, under.top + 1);
+            _cbm.out(_cbm.chr$((setter === setUnderline) ? 0x71 : 0x77));
+            _cbm.locate(under.right + 1, under.top + 1);
+            _cbm.out(_cbm.getUnderline() + ' ');
         };
         var eraseRadioButtons = function () {
             _cbm.locate(1, fore.top + 1);
@@ -1041,20 +1093,18 @@ var CbmishConsole = /** @class */ (function () {
         var setForeground = function (value) {
             _cbm.foreground(value);
             fore.color = value;
-            _cbm.locate(fore.left, fore.top);
-            _cbm.out(fore.normal);
             back.color = value;
-            _cbm.locate(back.left, back.top);
-            _cbm.out(back.normal);
             bord.color = value;
-            _cbm.locate(bord.left, bord.top);
-            _cbm.out(bord.normal);
+            under.color = value;
         };
         var setBackground = function (value) {
             _cbm.background(value);
         };
         var setBorder = function (value) {
             _cbm.border(value);
+        };
+        var setUnderline = function (value) {
+            _cbm.underline(value);
         };
         setter = setForeground;
         redrawRadioButtons();
@@ -1090,6 +1140,39 @@ var CbmishConsole = /** @class */ (function () {
         }
         if (wasBlinking)
             this.blinkCursor();
+    };
+    CbmishConsole.prototype.aboutCbmish = function () {
+        this.lowercase = true;
+        this.hideCursor();
+        this.border(0);
+        this.background(11);
+        this.foreground(15);
+        this.clear();
+        this.foreground(1);
+        this.out('cbmish-script');
+        this.foreground(15);
+        this.out(' is a TypeScript module\r'
+            + 'for displaying content that looks\r'
+            + 'like a famous 8-bit console we love\r'
+            + 'by display the PETSCII characters in\r'
+            + 'familiar colors and patterns\r'
+            + '\r'
+            + 'The purpose is to be able to render\r'
+            + 'various web content with this look &\r'
+            + 'feel to retain the retro vibe, yet also\r'
+            + 'enable modern programming languages like'
+            + 'TypeScript.\r'
+            + '\r'
+            + 'Open source:\r');
+        this.foreground(14);
+        this.out('  ');
+        var link = 'github.com/davervw/cbmish-script';
+        this.ul = 15;
+        this.addLink(link, 'https://' + link);
+        this.out('\r');
+        this.foreground(15);
+        this.locate(this.cols - 1, this.rows - 1);
+        this.blinkCursor();
     };
     return CbmishConsole;
 }());
