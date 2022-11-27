@@ -1,5 +1,6 @@
 var cbm = new CbmishConsole();
 cbm.CbmishConsole();
+cbm.removeButtons();
 
 const mainMenu = function() {
     cbm.init();
