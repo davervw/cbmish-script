@@ -1164,12 +1164,23 @@ var CbmishConsole = /** @class */ (function () {
             + 'TypeScript.\r'
             + '\r'
             + 'Open source:\r');
-        this.foreground(14);
         this.out('  ');
+        this.foreground(14);
         var link = 'github.com/davervw/cbmish-script';
         this.ul = 15;
         this.addLink(link, 'https://' + link);
         this.out('\r');
+        this.out('\r');
+        this.out('  ');
+        var link2 = 'https://github.com/davervw?tab=repositories&q=64&type=&language=&sort=';
+        this.addLink('other C64 repositories', link2);
+        this.out('\r');
+        this.out('\r');
+        this.out('\r');
+        this.foreground(15);
+        this.out('Blog:  ');
+        this.foreground(14);
+        this.addLink('davevw.com', 'http://www.davevw.com');
         this.foreground(15);
         this.locate(this.cols - 1, this.rows - 1);
         this.blinkCursor();
