@@ -745,16 +745,16 @@ var CbmishConsole = /** @class */ (function () {
                 var i = row * 16 + col;
                 this.lowercase = false;
                 this.locate(col + 4, row + 8);
-                if ((i & 127) > 32)
+                if ((i & 127) >= 32)
                     this.out(this.chr$(i));
                 else
-                    this.out(' ');
+                    this.out(this.chr$(18) + this.chr$(64 + i) + this.chr$(146));
                 this.lowercase = true;
                 this.locate(col + 21, row + 8);
-                if ((i & 127) > 32)
+                if ((i & 127) >= 32)
                     this.out(this.chr$(i));
                 else
-                    this.out(' ');
+                    this.out(this.chr$(18) + this.chr$(64 + i) + this.chr$(146));
             }
         }
         for (var i = 7 * 40; i < 1000; ++i)
