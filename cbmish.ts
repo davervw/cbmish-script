@@ -557,7 +557,7 @@ class CbmishConsole {
 
     public background(bg: number) {
         const canvas = document.getElementsByTagName('canvas');
-        canvas[1].outerHTML = `<canvas class="background background${(bg & 0xF)}"></canvas>`
+        canvas[1].outerHTML = `<canvas class="background" style="background-color: ${this.colorToRgbString(bg)};"></canvas>`
         this.bg = bg;
     }
 
@@ -567,7 +567,7 @@ class CbmishConsole {
 
     public border(color: number) {
         const canvas = document.getElementsByTagName('canvas');
-        canvas[0].outerHTML = `<canvas class="border border${(color & 0xF)}"></canvas>`
+        canvas[0].outerHTML = `<canvas class="border" style="background-color: ${this.colorToRgbString(color)};"></canvas>`
         this.bd = color;
     }
 
@@ -1280,5 +1280,14 @@ class CbmishConsole {
         this.foreground(15);
         this.locate(this.cols - 1, this.rows - 1);
         this.blinkCursor();
+    }
+
+    colorToRgbString(color: number): string {
+        color = color & 15;
+        return '#'
+          +this.palette[color][0].toString(16).padStart(2, '0')
+          +this.palette[color][1].toString(16).padStart(2, '0')
+          +this.palette[color][2].toString(16).padStart(2, '0')
+          +this.palette[color][3].toString(16).padStart(2, '0');
     }
 }

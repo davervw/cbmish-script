@@ -485,7 +485,7 @@ var CbmishConsole = /** @class */ (function () {
     };
     CbmishConsole.prototype.background = function (bg) {
         var canvas = document.getElementsByTagName('canvas');
-        canvas[1].outerHTML = "<canvas class=\"background background".concat((bg & 0xF), "\"></canvas>");
+        canvas[1].outerHTML = "<canvas class=\"background\" style=\"background-color: ".concat(this.colorToRgbString(bg), ";\"></canvas>");
         this.bg = bg;
     };
     CbmishConsole.prototype.getBackground = function () {
@@ -493,7 +493,7 @@ var CbmishConsole = /** @class */ (function () {
     };
     CbmishConsole.prototype.border = function (color) {
         var canvas = document.getElementsByTagName('canvas');
-        canvas[0].outerHTML = "<canvas class=\"border border".concat((color & 0xF), "\"></canvas>");
+        canvas[0].outerHTML = "<canvas class=\"border\" style=\"background-color: ".concat(this.colorToRgbString(color), ";\"></canvas>");
         this.bd = color;
     };
     CbmishConsole.prototype.getBorder = function () {
@@ -1184,6 +1184,14 @@ var CbmishConsole = /** @class */ (function () {
         this.foreground(15);
         this.locate(this.cols - 1, this.rows - 1);
         this.blinkCursor();
+    };
+    CbmishConsole.prototype.colorToRgbString = function (color) {
+        color = color & 15;
+        return '#'
+            + this.palette[color][0].toString(16).padStart(2, '0')
+            + this.palette[color][1].toString(16).padStart(2, '0')
+            + this.palette[color][2].toString(16).padStart(2, '0')
+            + this.palette[color][3].toString(16).padStart(2, '0');
     };
     return CbmishConsole;
 }());
