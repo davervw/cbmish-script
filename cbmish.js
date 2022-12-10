@@ -548,7 +548,6 @@ var CbmishConsole = /** @class */ (function () {
     };
     CbmishConsole.prototype.keydown = function (key, shiftKey, ctrlKey, altKey) {
         var _a;
-        //console.log(`keydown: ${key} ${shiftKey} ${ctrlKey} ${altKey}`);
         if (key == 'Home' && !altKey) {
             if (shiftKey && !ctrlKey)
                 this.clear();
@@ -624,7 +623,7 @@ var CbmishConsole = /** @class */ (function () {
                 this.blinkCursor();
             return true;
         }
-        else if (key >= '1' && key <= '8' && !shiftKey && (ctrlKey || altKey) && !this.tabPressed) {
+        else if (key >= '1' && key <= '8' && !shiftKey && altKey && !this.tabPressed) {
             this.fg = key.charCodeAt(0) - '0'.charCodeAt(0) + 7;
             if (this.hideCursor())
                 this.blinkCursor();
@@ -643,6 +642,8 @@ var CbmishConsole = /** @class */ (function () {
             return true;
         }
         else if (key.length == 1 && (ctrlKey || altKey) && !this.tabPressed) {
+            if ((key == '-' || key == '=') && ctrlKey && !altKey)
+                return false;
             var code = (_a = this.cbmGraphicsKeys.find(function (x) { return x.key == key; })) === null || _a === void 0 ? void 0 : _a.code;
             if (code != null) {
                 this.out(this.chr$(code));

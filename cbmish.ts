@@ -625,7 +625,6 @@ class CbmishConsole {
     }
 
     private keydown(key: string, shiftKey: boolean, ctrlKey: boolean, altKey: boolean): boolean {
-        //console.log(`keydown: ${key} ${shiftKey} ${ctrlKey} ${altKey}`);
         if (key == 'Home' && !altKey) {
             if (shiftKey && !ctrlKey)
                 this.clear()
@@ -689,7 +688,7 @@ class CbmishConsole {
             if (this.hideCursor())
                 this.blinkCursor();
             return true;
-        } else if (key >= '1' && key <= '8' && !shiftKey && (ctrlKey || altKey) && !this.tabPressed) {
+        } else if (key >= '1' && key <= '8' && !shiftKey && altKey && !this.tabPressed) {
             this.fg = key.charCodeAt(0)-'0'.charCodeAt(0)+7;
             if (this.hideCursor())
                 this.blinkCursor();
@@ -705,6 +704,8 @@ class CbmishConsole {
             this.out(String.fromCharCode(key.charCodeAt(0)-'A'.charCodeAt(0)+129));
             return true;
         } else if (key.length == 1 && (ctrlKey || altKey) && !this.tabPressed) {
+            if ((key=='-' || key=='=') && ctrlKey && !altKey)
+                return false;
             let code = this.cbmGraphicsKeys.find(x => x.key == key)?.code;
             if (code != null) {
                 this.out(this.chr$(code));
