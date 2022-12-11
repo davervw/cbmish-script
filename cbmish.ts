@@ -1346,9 +1346,10 @@ class CbmishConsole {
 
     loresUnPlot(x: number, y: number) {
         let i = 1 << ((x & 1)+2*(y & 1)); 
+        let mask = ~i;
         let offset = Math.floor(x/2) + this.cols*Math.floor(y/2);
-        i = (Math.max(this.loresChars.indexOf(this.charCells[offset]), 0) && ~i);
-        this.poke(1024 + offset, this.loresChars[i]);
+        let j = Math.max(this.loresChars.indexOf(this.charCells[offset]), 0);
+        this.poke(1024 + offset, this.loresChars[j & mask]);
     }
 
     largeText(s : string) {

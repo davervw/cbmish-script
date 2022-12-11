@@ -1245,9 +1245,10 @@ var CbmishConsole = /** @class */ (function () {
     };
     CbmishConsole.prototype.loresUnPlot = function (x, y) {
         var i = 1 << ((x & 1) + 2 * (y & 1));
+        var mask = ~i;
         var offset = Math.floor(x / 2) + this.cols * Math.floor(y / 2);
-        i = (Math.max(this.loresChars.indexOf(this.charCells[offset]), 0) && ~i);
-        this.poke(1024 + offset, this.loresChars[i]);
+        var j = Math.max(this.loresChars.indexOf(this.charCells[offset]), 0);
+        this.poke(1024 + offset, this.loresChars[j & mask]);
     };
     CbmishConsole.prototype.largeText = function (s) {
         var isBlinking = this.hideCursor();
