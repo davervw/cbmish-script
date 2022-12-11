@@ -20,12 +20,12 @@ var mainMenu = function () {
     };
     cbm.locate(b1.right + 2, y);
     cbm.fg = 8;
-    var b7 = cbm.addButton("Disolve  ");
+    var b7 = cbm.addButton("Dissolve ");
     b7.onclick = function () {
         setTimeout(function () {
             cbm.removeButtons();
             addleave();
-            disolve();
+            dissolve();
         }, 250);
     };
     cbm.locate(x, y += 3);
@@ -41,7 +41,7 @@ var mainMenu = function () {
     };
     cbm.locate(b2.right + 2, y);
     cbm.fg = 3;
-    var b3 = cbm.addButton("Petscii ");
+    var b3 = cbm.addButton("Petscii  ");
     b3.onclick = function () {
         setTimeout(function () {
             cbm.removeButtons();
@@ -130,7 +130,7 @@ var onleave = function () {
         _cbm.escapePressed = false;
     }, 250);
 };
-var disolve = function () {
+var dissolve = function () {
     var _a;
     cbm.clear();
     var a = [];

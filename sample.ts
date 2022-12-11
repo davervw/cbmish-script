@@ -24,13 +24,13 @@ const mainMenu = function() {
 
     cbm.locate(b1.right+2, y);
     cbm.fg = 8;
-    const b7 = cbm.addButton("Disolve  ");
+    const b7 = cbm.addButton("Dissolve ");
     b7.onclick = () => {
         setTimeout(
             () => {
                 cbm.removeButtons();
                 addleave();
-                disolve();
+                dissolve();
             }, 250);
     }
 
@@ -49,7 +49,7 @@ const mainMenu = function() {
 
     cbm.locate(b2.right+2, y);
     cbm.fg = 3;
-    const b3 = cbm.addButton("Petscii ");
+    const b3 = cbm.addButton("Petscii  ");
     b3.onclick = () => {
         setTimeout(
             () => { 
@@ -153,7 +153,7 @@ const onleave = function () {
     }, 250);
 };
 
-const disolve = function () {
+const dissolve = function () {
     cbm.clear(); 
     let a=[]; 
     for (let i=0; i<4000; ++i) 
