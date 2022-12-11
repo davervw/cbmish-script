@@ -1332,4 +1332,49 @@ class CbmishConsole {
         let element: any = document.getElementsByTagName('body')[0];
         element.style = `transform: scale(${scale}) !important;`
     }
+
+    private loresChars = [ 32, 126, 124, 226, 123, 97, 255, 236,
+        108, 127, 225, 251, 98, 252, 254, 160 ];
+
+    loresPlot(x: number, y: number) {
+        let i = 1 << ((x & 1)+2*(y & 1)); 
+        let offset = Math.floor(x/2) + this.cols*Math.floor(y/2);
+        i |= Math.max(this.loresChars.indexOf(this.charCells[offset]), 0);
+        this.poke(1024 + offset, this.loresChars[i]);
+        this.poke(13.5*4096 + offset, this.fg);
+    }
+
+    loresUnPlot(x: number, y: number) {
+        let i = 1 << ((x & 1)+2*(y & 1)); 
+        let offset = Math.floor(x/2) + this.cols*Math.floor(y/2);
+        i = (Math.max(this.loresChars.indexOf(this.charCells[offset]), 0) && ~i);
+        this.poke(1024 + offset, this.loresChars[i]);
+    }
+
+    largeText(s : string) {
+        let isBlinking = this.hideCursor();
+        while (this.row + 4 >= this.rows) {
+            --this.row;
+            this.scrollScreen();
+        }
+        for (let row = 0; row < 8; ++row) {
+            for (let col = 0; col < s.length * 8 && this.col + col/2 < this.cols; ++col) {
+                if ((row % 2) == 0 && (col % 2) == 0) {
+                    let offset = (this.row + row/2)*this.cols+this.col + col/2;
+                    this.pokeScreen(1024+offset, 32);
+                    this.poke(13.5*4096+offset, this.fg);
+                }
+                let code = this.ascii_to_petscii(s.charCodeAt(col / 8));
+                let byte = c64_char_rom[code*8 + row];
+                let nbit = 7-(col % 8);
+                let x = this.col * 2 + col;
+                let y = this.row * 2 + row;
+                if ((byte & (1 << nbit)) != 0)
+                    this.loresPlot(x, y);
+            }
+        }
+        this.locate(0, this.row + 4);
+        if (isBlinking)
+            this.blinkCursor();
+    }
 }

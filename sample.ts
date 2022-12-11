@@ -22,6 +22,18 @@ const mainMenu = function() {
             }, 250);
     }
 
+    cbm.locate(b1.right+2, y);
+    cbm.fg = 8;
+    const b7 = cbm.addButton("Disolve  ");
+    b7.onclick = () => {
+        setTimeout(
+            () => {
+                cbm.removeButtons();
+                addleave();
+                disolve();
+            }, 250);
+    }
+
     cbm.locate(x, y+=3);
     cbm.fg = 1;
     const b2 = cbm.addButton("chr$()s ");
@@ -35,7 +47,7 @@ const mainMenu = function() {
             }, 250);
     }
 
-    cbm.locate(x, y+=3);
+    cbm.locate(b2.right+2, y);
     cbm.fg = 3;
     const b3 = cbm.addButton("Petscii ");
     b3.onclick = () => {
@@ -62,6 +74,18 @@ const mainMenu = function() {
             }, 250);
     }
 
+    cbm.locate(b4.right+2, y);
+    cbm.fg = 12;
+    const b8 = cbm.addButton("Low res  ");
+    b8.onclick = () => {
+        setTimeout(
+            () => {
+                cbm.removeButtons();
+                addleave();
+                loresPlotDemo();
+            }, 250);
+    }
+
     cbm.locate(x, y+=3);
     cbm.fg = 13;
     const b5 = cbm.addButton("Keyboard");
@@ -76,7 +100,19 @@ const mainMenu = function() {
             }, 250);
     }
 
-    cbm.locate(x, y+=3);
+    cbm.locate(b5.right+2, y);
+    cbm.fg = 5;
+    const b9 = cbm.addButton("Sine Wave");
+    b9.onclick = () => {
+        setTimeout(
+            () => {
+                cbm.removeButtons();
+                addleave();
+                loresSineWave();
+            }, 250);
+    }
+
+    cbm.locate(x, y+=6);
     cbm.fg = 15;
     const b6 = cbm.addButton("About   ");
     b6.onclick = () => {
@@ -116,5 +152,76 @@ const onleave = function () {
         _cbm.escapePressed=false;
     }, 250);
 };
+
+const disolve = function () {
+    cbm.clear(); 
+    let a=[]; 
+    for (let i=0; i<4000; ++i) 
+    a[i]=i; 
+    for (let i=0; i<4000; ++i) { 
+        let j=Math.floor(Math.random()*4000); 
+        [ a[i], a[j] ] = [ a[j], a[i] ]; 
+    } 
+    let i=0; 
+    cbm.repeat(() => {
+         for (let j=1; j<=10 ; ++j) {
+            let offset = a[i++ % 4000];
+            let y = Math.floor(offset / 80);
+            let x = offset % 80;
+            if (y < 6 && x >= 74)
+                continue;
+            if (i <= 4000) {
+                let fg = Math.floor(y / 12) * 4 + Math.floor(x / 20);
+                if (fg > 15)
+                    fg -= 4;
+                cbm.foreground(fg);
+                cbm.loresPlot(x, y);
+            } else
+                cbm.loresUnPlot(x, y);
+            if (i == 8000) {
+                let closeButton = cbm.findButton("X");
+                closeButton.onclick();
+            }
+        } 
+    }, 800, 0);
+}
+
+const loresPlotDemo = function () {
+    cbm.clear();
+    let n = Math.ceil(4*Math.PI/0.03) + 1;
+    let i = 0;
+    cbm.repeat( () => {
+        let p=Math.cos(i/2);
+        let x=39*p*Math.cos(i)+40;
+        let y=24*p*Math.sin(i)+25;
+        cbm.loresPlot(x, y);
+        i += 0.03;
+    }, n, 5);
+}
+
+const loresSineWave = function () {
+    cbm.clear();
+    cbm.newLine();
+    cbm.foreground(7);
+    cbm.largeText('HELLO');
+    cbm.largeText('CBM!');
+    cbm.foreground(0);
+    for (let x=0; x<80; ++x)
+        cbm.loresPlot(x, 25); // centered horizontal line
+    for (let y=0; y<50; ++y)
+        cbm.loresPlot(40, y); // centered vertical line
+    cbm.foreground(1);
+    let x=0;
+    cbm.repeat( () => {
+        let y=25*Math.sin(x/10)+25;
+        cbm.loresPlot(x, y);
+        if (++x == 80) {
+            cbm.locate(0, 19);
+            cbm.foreground(14);
+            cbm.out('READY');
+            cbm.newLine();
+        };
+    }, 80);
+}
 
 mainMenu();

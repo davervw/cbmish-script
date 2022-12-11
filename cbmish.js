@@ -85,6 +85,8 @@ var CbmishConsole = /** @class */ (function () {
             { 'key': '-', 'code': 220 },
             { 'key': '=', 'code': 166 },
         ];
+        this.loresChars = [32, 126, 124, 226, 123, 97, 255, 236,
+            108, 127, 225, 251, 98, 252, 254, 160];
     }
     CbmishConsole.prototype.CbmishConsole = function () {
         var _this = this;
@@ -1233,6 +1235,45 @@ var CbmishConsole = /** @class */ (function () {
         var scale = Math.min(scaleX, scaleY);
         var element = document.getElementsByTagName('body')[0];
         element.style = "transform: scale(".concat(scale, ") !important;");
+    };
+    CbmishConsole.prototype.loresPlot = function (x, y) {
+        var i = 1 << ((x & 1) + 2 * (y & 1));
+        var offset = Math.floor(x / 2) + this.cols * Math.floor(y / 2);
+        i |= Math.max(this.loresChars.indexOf(this.charCells[offset]), 0);
+        this.poke(1024 + offset, this.loresChars[i]);
+        this.poke(13.5 * 4096 + offset, this.fg);
+    };
+    CbmishConsole.prototype.loresUnPlot = function (x, y) {
+        var i = 1 << ((x & 1) + 2 * (y & 1));
+        var offset = Math.floor(x / 2) + this.cols * Math.floor(y / 2);
+        i = (Math.max(this.loresChars.indexOf(this.charCells[offset]), 0) && ~i);
+        this.poke(1024 + offset, this.loresChars[i]);
+    };
+    CbmishConsole.prototype.largeText = function (s) {
+        var isBlinking = this.hideCursor();
+        while (this.row + 4 >= this.rows) {
+            --this.row;
+            this.scrollScreen();
+        }
+        for (var row = 0; row < 8; ++row) {
+            for (var col = 0; col < s.length * 8 && this.col + col / 2 < this.cols; ++col) {
+                if ((row % 2) == 0 && (col % 2) == 0) {
+                    var offset = (this.row + row / 2) * this.cols + this.col + col / 2;
+                    this.pokeScreen(1024 + offset, 32);
+                    this.poke(13.5 * 4096 + offset, this.fg);
+                }
+                var code = this.ascii_to_petscii(s.charCodeAt(col / 8));
+                var byte = c64_char_rom[code * 8 + row];
+                var nbit = 7 - (col % 8);
+                var x = this.col * 2 + col;
+                var y = this.row * 2 + row;
+                if ((byte & (1 << nbit)) != 0)
+                    this.loresPlot(x, y);
+            }
+        }
+        this.locate(0, this.row + 4);
+        if (isBlinking)
+            this.blinkCursor();
     };
     return CbmishConsole;
 }());
