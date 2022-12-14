@@ -112,6 +112,16 @@ const mainMenu = function() {
             }, 250);
     }
 
+    cbm.locate(36, 21);
+    cbm.fg = 1;
+    const b10 = cbm.addButton(cbm.chr$(123));
+    b10.onclick = () => {
+        setTimeout(
+            () => {
+                cbm.toggleFullScreen();
+            }, 250);
+    }
+
     cbm.locate(x, y+=6);
     cbm.fg = 15;
     const b6 = cbm.addButton("About   ");

@@ -94,6 +94,14 @@ var mainMenu = function () {
             loresSineWave();
         }, 250);
     };
+    cbm.locate(36, 21);
+    cbm.fg = 1;
+    var b10 = cbm.addButton(cbm.chr$(123));
+    b10.onclick = function () {
+        setTimeout(function () {
+            cbm.toggleFullScreen();
+        }, 250);
+    };
     cbm.locate(x, y += 6);
     cbm.fg = 15;
     var b6 = cbm.addButton("About   ");
