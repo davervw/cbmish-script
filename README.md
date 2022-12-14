@@ -15,9 +15,9 @@ Hosted at github.io: [Live Trial](https://davervw.github.io/cbmish-script/)
 
 ## Build ##
 
-To build the JavaScript .js files referenced by index.html, use tsc (TypeScript compiler), available via npm, and can run in the background
+To build the JavaScript .js files referenced by index.html, use tsc (TypeScript compiler), available via npm, and can run in the background.  I send to a separate directory for use with GitHub Pages.
 
-    tsc --build --watch .
+    tsc --outDir docs --watch
 
 ## Sample ##
 
