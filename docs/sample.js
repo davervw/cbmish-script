@@ -202,3 +202,4 @@ var loresSineWave = function () {
     }, 80);
 };
 mainMenu();
+//# sourceMappingURL=sample.js.map

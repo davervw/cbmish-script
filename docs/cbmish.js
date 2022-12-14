@@ -1278,3 +1278,4 @@ var CbmishConsole = /** @class */ (function () {
     };
     return CbmishConsole;
 }());
+//# sourceMappingURL=cbmish.js.map
