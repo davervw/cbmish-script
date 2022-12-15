@@ -1178,7 +1178,7 @@ var CbmishConsole = /** @class */ (function () {
         this.out(' is a TypeScript module\r'
             + 'for displaying content that looks\r'
             + 'like a famous 8-bit console we love\r'
-            + 'by display the PETSCII characters in\r'
+            + 'by displaying the PETSCII characters in\r'
             + 'familiar colors and patterns\r'
             + '\r'
             + 'The purpose is to be able to render\r'
