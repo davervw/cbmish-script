@@ -11,7 +11,7 @@ Console (display output) that has features resembling an 8-bit classic system.  
 
 ## Live Trial ##
 
-Hosted at github.io: [Live Trial](https://davervw.github.io/cbmish-script/)
+Hosted at github.io: [Live Trial](https://davervw.github.io/cbmish-script?fullScreen=true)
 
 ## Build ##
 
