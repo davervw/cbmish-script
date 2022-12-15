@@ -101,6 +101,8 @@ class CbmishConsole {
         this.canvas.addEventListener('click', (event: MouseEvent) => this.onclickcanvas(event), false);
         this.canvas.addEventListener('mousemove', (event: MouseEvent) => this.onmousemovecanvas(event), false);
         this.canvas.addEventListener('mouseleave', (event: MouseEvent) => this.onmouseleavecanvas(event), false);
+        this.checkStartupButton();
+        this.checkFullScreen();
     }
 
     public init() {
@@ -1028,7 +1030,10 @@ class CbmishConsole {
         return button;
     }
 
-    public findButton(text: string): any {
+    public findButton(text: string, contains: boolean = false): any {
+        if (contains)
+            return this.buttons.find(button => button.text.indexOf(text) >= 0);
+
         return this.buttons.find(button => button.text == text);
     }
 
@@ -1377,5 +1382,28 @@ class CbmishConsole {
         this.locate(0, this.row + 4);
         if (isBlinking)
             this.blinkCursor();
+    }
+
+    private checkStartupIntervalId = -1;
+    private checkStartupButton()
+    {
+        let params = new URLSearchParams(window.location.search);
+        let buttonName = params.get('button');
+        if (buttonName)
+            this.checkStartupIntervalId = setInterval(() => {
+                clearInterval(this.checkStartupIntervalId);
+                this.checkStartupIntervalId = -1;
+                let button = this.findButton(buttonName, true);
+                if (button)
+                    button.onclick();
+            }, 250);        
+    }
+
+    private checkFullScreen()
+    {
+        let params = new URLSearchParams(window.location.search);
+        let value = params.get('fullScreen');
+        if (value == 'true')
+            this.toggleFullScreen();
     }
 }

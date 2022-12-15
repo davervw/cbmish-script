@@ -87,6 +87,7 @@ var CbmishConsole = /** @class */ (function () {
         ];
         this.loresChars = [32, 126, 124, 226, 123, 97, 255, 236,
             108, 127, 225, 251, 98, 252, 254, 160];
+        this.checkStartupIntervalId = -1;
     }
     CbmishConsole.prototype.CbmishConsole = function () {
         var _this = this;
@@ -98,6 +99,8 @@ var CbmishConsole = /** @class */ (function () {
         this.canvas.addEventListener('click', function (event) { return _this.onclickcanvas(event); }, false);
         this.canvas.addEventListener('mousemove', function (event) { return _this.onmousemovecanvas(event); }, false);
         this.canvas.addEventListener('mouseleave', function (event) { return _this.onmouseleavecanvas(event); }, false);
+        this.checkStartupButton();
+        this.checkFullScreen();
     };
     CbmishConsole.prototype.init = function () {
         this.hideCursor();
@@ -962,7 +965,10 @@ var CbmishConsole = /** @class */ (function () {
         button.onclick = function () { return window.open(button.context); };
         return button;
     };
-    CbmishConsole.prototype.findButton = function (text) {
+    CbmishConsole.prototype.findButton = function (text, contains) {
+        if (contains === void 0) { contains = false; }
+        if (contains)
+            return this.buttons.find(function (button) { return button.text.indexOf(text) >= 0; });
         return this.buttons.find(function (button) { return button.text == text; });
     };
     CbmishConsole.prototype.removeButton = function (button) {
@@ -1275,6 +1281,25 @@ var CbmishConsole = /** @class */ (function () {
         this.locate(0, this.row + 4);
         if (isBlinking)
             this.blinkCursor();
+    };
+    CbmishConsole.prototype.checkStartupButton = function () {
+        var _this = this;
+        var params = new URLSearchParams(window.location.search);
+        var buttonName = params.get('button');
+        if (buttonName)
+            this.checkStartupIntervalId = setInterval(function () {
+                clearInterval(_this.checkStartupIntervalId);
+                _this.checkStartupIntervalId = -1;
+                var button = _this.findButton(buttonName, true);
+                if (button)
+                    button.onclick();
+            }, 250);
+    };
+    CbmishConsole.prototype.checkFullScreen = function () {
+        var params = new URLSearchParams(window.location.search);
+        var value = params.get('fullScreen');
+        if (value == 'true')
+            this.toggleFullScreen();
     };
     return CbmishConsole;
 }());
