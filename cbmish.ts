@@ -28,12 +28,11 @@ class CbmishConsole {
     private fullScreen: boolean = false;
     private scale = 1;
 
-    private canvas: any = document.getElementById("screen");
-    private rows = Math.floor(this.canvas.getAttribute('height') / 8);
-    private cols = Math.floor(this.canvas.getAttribute('width') / 8);
-    private ctx = this.canvas?.getContext("2d");
-    private imgData = this.ctx.getImageData(0, 0, this.cols*8, this.rows*8);
-    private bitmap = this.imgData.data;
+    private rows = 25;
+    private cols = 40;
+    private ctx: CanvasRenderingContext2D;
+    private imgData: ImageData;
+    private bitmap: Uint8ClampedArray;
 
     private charCells: number[] = [];
     private colorCells: number[] = [];
@@ -94,13 +93,23 @@ class CbmishConsole {
     ];
 
     public CbmishConsole() {
-        this.init();
+        const consoleElement = document.getElementsByTagName('console')[0];
+        consoleElement.innerHTML = '<canvas class="border"></canvas><canvas class="background"></canvas><canvas class="foreground" width="320" height="200"></canvas>';
+        const foregroundCanvas = consoleElement.getElementsByClassName("foreground")[0] as HTMLCanvasElement;
+        const height = Number.parseInt(foregroundCanvas.getAttribute('height'));
+        const width = Number.parseInt(foregroundCanvas.getAttribute('width'));
+        this.rows = Math.floor(height / 8);
+        this.cols = Math.floor(width / 8);
+        this.ctx = foregroundCanvas.getContext("2d");
+        this.imgData = this.ctx.getImageData(0, 0, this.cols*8, this.rows*8);
+        this.bitmap = this.imgData.data;
+        this.init();        
         window.addEventListener('keypress', (event: KeyboardEvent) => { this.keypress(event); });
         window.addEventListener('keydown', (event: KeyboardEvent) => { if (this.keydown(event.key, event.shiftKey, event.ctrlKey, event.altKey)) event.preventDefault(); });
         window.addEventListener('keyup', (event: KeyboardEvent) => { this.keyup(event.key, event.shiftKey, event.ctrlKey, event.altKey); });
-        this.canvas.addEventListener('click', (event: MouseEvent) => this.onclickcanvas(event), false);
-        this.canvas.addEventListener('mousemove', (event: MouseEvent) => this.onmousemovecanvas(event), false);
-        this.canvas.addEventListener('mouseleave', (event: MouseEvent) => this.onmouseleavecanvas(event), false);
+        foregroundCanvas.addEventListener('click', (event: MouseEvent) => this.onclickcanvas(event), false);
+        foregroundCanvas.addEventListener('mousemove', (event: MouseEvent) => this.onmousemovecanvas(event), false);
+        foregroundCanvas.addEventListener('mouseleave', (event: MouseEvent) => this.onmouseleavecanvas(event), false);
         this.checkStartupButton();
         this.checkFullScreen();
     }
@@ -560,8 +569,8 @@ class CbmishConsole {
     }
 
     public background(bg: number) {
-        const canvas = document.getElementsByTagName('canvas');
-        canvas[1].outerHTML = `<canvas class="background" style="background-color: ${this.colorToRgbString(bg)};"></canvas>`
+        const backgroundCanvas = document.getElementsByTagName('console')[0].getElementsByClassName('background')[0] as HTMLCanvasElement;
+        backgroundCanvas.style.backgroundColor = this.colorToRgbString(bg);
         this.bg = bg;
     }
 
@@ -570,8 +579,8 @@ class CbmishConsole {
     }
 
     public border(color: number) {
-        const canvas = document.getElementsByTagName('canvas');
-        canvas[0].outerHTML = `<canvas class="border" style="background-color: ${this.colorToRgbString(color)};"></canvas>`
+        const borderCanvas = document.getElementsByTagName('console')[0].getElementsByClassName('border')[0] as HTMLCanvasElement;
+        borderCanvas.style.backgroundColor = this.colorToRgbString(color);
         this.bd = color;
     }
 
@@ -1385,8 +1394,7 @@ class CbmishConsole {
     }
 
     private checkStartupIntervalId = -1;
-    private checkStartupButton()
-    {
+    private checkStartupButton() {
         let params = new URLSearchParams(window.location.search);
         let buttonName = params.get('button');
         if (buttonName)
@@ -1399,8 +1407,7 @@ class CbmishConsole {
             }, 250);        
     }
 
-    private checkFullScreen()
-    {
+    private checkFullScreen() {
         let params = new URLSearchParams(window.location.search);
         let value = params.get('fullScreen');
         if (value == 'true')

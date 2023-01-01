@@ -5,7 +5,6 @@
 // davevw.com
 var CbmishConsole = /** @class */ (function () {
     function CbmishConsole() {
-        var _a;
         this.dirtyx = 0;
         this.dirtyy = 0;
         this.dirtywidth = 0;
@@ -25,12 +24,8 @@ var CbmishConsole = /** @class */ (function () {
         this.tabPressed = false;
         this.fullScreen = false;
         this.scale = 1;
-        this.canvas = document.getElementById("screen");
-        this.rows = Math.floor(this.canvas.getAttribute('height') / 8);
-        this.cols = Math.floor(this.canvas.getAttribute('width') / 8);
-        this.ctx = (_a = this.canvas) === null || _a === void 0 ? void 0 : _a.getContext("2d");
-        this.imgData = this.ctx.getImageData(0, 0, this.cols * 8, this.rows * 8);
-        this.bitmap = this.imgData.data;
+        this.rows = 25;
+        this.cols = 40;
         this.charCells = [];
         this.colorCells = [];
         this.buttons = [];
@@ -91,14 +86,24 @@ var CbmishConsole = /** @class */ (function () {
     }
     CbmishConsole.prototype.CbmishConsole = function () {
         var _this = this;
+        var consoleElement = document.getElementsByTagName('console')[0];
+        consoleElement.innerHTML = '<canvas class="border"></canvas><canvas class="background"></canvas><canvas class="foreground" width="320" height="200"></canvas>';
+        var foregroundCanvas = consoleElement.getElementsByClassName("foreground")[0];
+        var height = Number.parseInt(foregroundCanvas.getAttribute('height'));
+        var width = Number.parseInt(foregroundCanvas.getAttribute('width'));
+        this.rows = Math.floor(height / 8);
+        this.cols = Math.floor(width / 8);
+        this.ctx = foregroundCanvas.getContext("2d");
+        this.imgData = this.ctx.getImageData(0, 0, this.cols * 8, this.rows * 8);
+        this.bitmap = this.imgData.data;
         this.init();
         window.addEventListener('keypress', function (event) { _this.keypress(event); });
         window.addEventListener('keydown', function (event) { if (_this.keydown(event.key, event.shiftKey, event.ctrlKey, event.altKey))
             event.preventDefault(); });
         window.addEventListener('keyup', function (event) { _this.keyup(event.key, event.shiftKey, event.ctrlKey, event.altKey); });
-        this.canvas.addEventListener('click', function (event) { return _this.onclickcanvas(event); }, false);
-        this.canvas.addEventListener('mousemove', function (event) { return _this.onmousemovecanvas(event); }, false);
-        this.canvas.addEventListener('mouseleave', function (event) { return _this.onmouseleavecanvas(event); }, false);
+        foregroundCanvas.addEventListener('click', function (event) { return _this.onclickcanvas(event); }, false);
+        foregroundCanvas.addEventListener('mousemove', function (event) { return _this.onmousemovecanvas(event); }, false);
+        foregroundCanvas.addEventListener('mouseleave', function (event) { return _this.onmouseleavecanvas(event); }, false);
         this.checkStartupButton();
         this.checkFullScreen();
     };
@@ -491,16 +496,16 @@ var CbmishConsole = /** @class */ (function () {
         this.fg = fg;
     };
     CbmishConsole.prototype.background = function (bg) {
-        var canvas = document.getElementsByTagName('canvas');
-        canvas[1].outerHTML = "<canvas class=\"background\" style=\"background-color: ".concat(this.colorToRgbString(bg), ";\"></canvas>");
+        var backgroundCanvas = document.getElementsByTagName('console')[0].getElementsByClassName('background')[0];
+        backgroundCanvas.style.backgroundColor = this.colorToRgbString(bg);
         this.bg = bg;
     };
     CbmishConsole.prototype.getBackground = function () {
         return this.bg;
     };
     CbmishConsole.prototype.border = function (color) {
-        var canvas = document.getElementsByTagName('canvas');
-        canvas[0].outerHTML = "<canvas class=\"border\" style=\"background-color: ".concat(this.colorToRgbString(color), ";\"></canvas>");
+        var borderCanvas = document.getElementsByTagName('console')[0].getElementsByClassName('border')[0];
+        borderCanvas.style.backgroundColor = this.colorToRgbString(color);
         this.bd = color;
     };
     CbmishConsole.prototype.getBorder = function () {
