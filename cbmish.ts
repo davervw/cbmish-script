@@ -38,6 +38,8 @@ class CbmishConsole {
     private colorCells: number[] = [];
 
     private buttons: any[] = [];
+    
+    public sprites = [];
 
     palette: number[][] = [
         [0, 0, 0, 255],       // [0] black
@@ -94,7 +96,7 @@ class CbmishConsole {
 
     public CbmishConsole() {
         const consoleElement = document.getElementsByTagName('console')[0];
-        consoleElement.innerHTML = '<canvas class="border"></canvas><canvas class="background"></canvas><canvas class="foreground" width="320" height="200"></canvas>';
+        consoleElement.innerHTML = '<canvas class="border"></canvas><canvas class="background"></canvas><canvas class="foreground" width="320" height="200"></canvas><canvas id="sprite1" width="24" height="21" style="visibility: hidden;"></canvas><canvas id="sprite0" width="24" height="21" style="visibility: hidden;"></canvas>';
         const foregroundCanvas = consoleElement.getElementsByClassName("foreground")[0] as HTMLCanvasElement;
         const height = Number.parseInt(foregroundCanvas.getAttribute('height'));
         const width = Number.parseInt(foregroundCanvas.getAttribute('width'));
@@ -112,6 +114,8 @@ class CbmishConsole {
         foregroundCanvas.addEventListener('mouseleave', (event: MouseEvent) => this.onmouseleavecanvas(event), false);
         this.checkStartupButton();
         this.checkFullScreen();
+        for (let i=0; i<8; ++i)
+            this.sprites.push(this.spriteFactory(i));
     }
 
     public init() {
@@ -688,6 +692,7 @@ class CbmishConsole {
         } else if (key == 'PageUp' && !shiftKey && !ctrlKey && !altKey && this.escapePressed
                 || key == 'Cancel' && !shiftKey && ctrlKey && !altKey) {
             this.removeButtons();
+            this.hideSprites();
             this.init();
         } else if (key >= '1' && key <= '8' && !shiftKey && !ctrlKey && !altKey && this.tabPressed) {
             this.fg = key.charCodeAt(0)-'0'.charCodeAt(0)-1;
@@ -1412,5 +1417,110 @@ class CbmishConsole {
         let value = params.get('fullScreen');
         if (value == 'true')
             this.toggleFullScreen();
+    }
+
+    private spriteFactory(n: number) {
+        let s = {
+            _image: null,
+            _color: 0,
+            _doubleX: false,
+            _doubleY: false,
+            _x: 0,
+            _y: 0,
+            color: null,
+            image: null,
+            move: null,
+            show: null,
+            hide: null,
+            draw: null,
+            size: null,
+            visible: false
+        };
+        s.color = (c: number) => { 
+            s._color = c; 
+            if (s.visible)
+                s.draw();
+        }
+        s.image = (imageSource: number[]) => {
+            s._image = imageSource;
+            if (s.visible)
+                s.draw();
+        }
+        s.move = (x: number, y: number) => {
+            // note: origin on C64 is (left=25,top=51), our css origin is (left=30px; top=25px;)
+            const canvas: any = document.getElementById(`sprite${n}`);
+            s._x = x;
+            s._y = y;
+            canvas.style.left = `${30+(s._x-25)}px`;
+            canvas.style.top = `${25+(s._y-51)}px`;
+        }
+        s.show = () => {
+            if (s.visible)
+                return;
+            s.visible = true;
+            s.draw();
+            const canvas = document.getElementById(`sprite${n}`) as HTMLCanvasElement;
+            if (canvas == null)
+                return;
+            canvas.style.visibility = 'visible';
+        }
+        s.hide = () => {
+            if (!s.visible)
+                return;
+            s.visible = false;
+            const canvas = document.getElementById(`sprite${n}`) as HTMLCanvasElement;
+            if (canvas == null)
+                return;
+            canvas.style.visibility = 'hidden';
+        }
+        s.size = (doubleX: boolean, doubleY: boolean) => {
+            s._doubleX = doubleX;
+            s._doubleY = doubleY;
+            if (s.visible)
+                s.draw();
+        }
+        s.draw = () => {
+            const canvas = document.getElementById(`sprite${n}`) as HTMLCanvasElement;
+            if (canvas == null)
+                return;
+            const width = 24 * (s._doubleX ? 2 : 1);
+            const height = 21 * (s._doubleY ? 2 : 1);
+            canvas.style.width = `${width}px`;
+            canvas.style.height = `${height}px`;
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            const imgData = ctx.getImageData(0, 0, width, height);
+            const bitmap = imgData.data;
+            for (let x = 0; x < width; ++x) {
+                for (let y = 0; y < height; ++y) {
+                    let srcX = (s._doubleX) ? (x >> 1) : x;
+                    let srcY = (s._doubleY) ? (y >> 1) : y;                    
+                    const src = srcY * 3 + (srcX >> 3);
+                    const mask = 1 << (7 - (srcX & 7));
+                    const dest = (x + y * width) * 4;
+                    if (s.visible && s._image != null && (s._image[src] & mask) != 0) {
+                        bitmap[dest + 0] = this.palette[s._color][0];
+                        bitmap[dest + 1] = this.palette[s._color][1];
+                        bitmap[dest + 2] = this.palette[s._color][2];
+                        bitmap[dest + 3] = 255;
+                    } else {
+                        bitmap[dest + 0] = 0;
+                        bitmap[dest + 1] = 0;
+                        bitmap[dest + 2] = 0;
+                        bitmap[dest + 3] = 0;
+                    }
+                }
+            }
+            ctx.putImageData(imgData, 0, 0, 0, 0, width, height);
+        }
+        return s;
+    }
+
+    public hideSprites() {
+        for (let sprite of this.sprites) {
+            if (sprite.visible)
+                sprite.hide();
+        }
     }
 }

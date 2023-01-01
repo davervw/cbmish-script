@@ -29,6 +29,7 @@ var CbmishConsole = /** @class */ (function () {
         this.charCells = [];
         this.colorCells = [];
         this.buttons = [];
+        this.sprites = [];
         this.palette = [
             [0, 0, 0, 255],
             [255, 255, 255, 255],
@@ -87,7 +88,7 @@ var CbmishConsole = /** @class */ (function () {
     CbmishConsole.prototype.CbmishConsole = function () {
         var _this = this;
         var consoleElement = document.getElementsByTagName('console')[0];
-        consoleElement.innerHTML = '<canvas class="border"></canvas><canvas class="background"></canvas><canvas class="foreground" width="320" height="200"></canvas>';
+        consoleElement.innerHTML = '<canvas class="border"></canvas><canvas class="background"></canvas><canvas class="foreground" width="320" height="200"></canvas><canvas id="sprite1" width="24" height="21" style="visibility: hidden;"></canvas><canvas id="sprite0" width="24" height="21" style="visibility: hidden;"></canvas>';
         var foregroundCanvas = consoleElement.getElementsByClassName("foreground")[0];
         var height = Number.parseInt(foregroundCanvas.getAttribute('height'));
         var width = Number.parseInt(foregroundCanvas.getAttribute('width'));
@@ -106,6 +107,8 @@ var CbmishConsole = /** @class */ (function () {
         foregroundCanvas.addEventListener('mouseleave', function (event) { return _this.onmouseleavecanvas(event); }, false);
         this.checkStartupButton();
         this.checkFullScreen();
+        for (var i = 0; i < 8; ++i)
+            this.sprites.push(this.spriteFactory(i));
     };
     CbmishConsole.prototype.init = function () {
         this.hideCursor();
@@ -619,6 +622,7 @@ var CbmishConsole = /** @class */ (function () {
         else if (key == 'PageUp' && !shiftKey && !ctrlKey && !altKey && this.escapePressed
             || key == 'Cancel' && !shiftKey && ctrlKey && !altKey) {
             this.removeButtons();
+            this.hideSprites();
             this.init();
         }
         else if (key >= '1' && key <= '8' && !shiftKey && !ctrlKey && !altKey && this.tabPressed) {
@@ -1305,6 +1309,112 @@ var CbmishConsole = /** @class */ (function () {
         var value = params.get('fullScreen');
         if (value == 'true')
             this.toggleFullScreen();
+    };
+    CbmishConsole.prototype.spriteFactory = function (n) {
+        var _this = this;
+        var s = {
+            _image: null,
+            _color: 0,
+            _doubleX: false,
+            _doubleY: false,
+            _x: 0,
+            _y: 0,
+            color: null,
+            image: null,
+            move: null,
+            show: null,
+            hide: null,
+            draw: null,
+            size: null,
+            visible: false
+        };
+        s.color = function (c) {
+            s._color = c;
+            if (s.visible)
+                s.draw();
+        };
+        s.image = function (imageSource) {
+            s._image = imageSource;
+            if (s.visible)
+                s.draw();
+        };
+        s.move = function (x, y) {
+            // note: origin on C64 is (left=25,top=51), our css origin is (left=30px; top=25px;)
+            var canvas = document.getElementById("sprite".concat(n));
+            s._x = x;
+            s._y = y;
+            canvas.style.left = "".concat(30 + (s._x - 25), "px");
+            canvas.style.top = "".concat(25 + (s._y - 51), "px");
+        };
+        s.show = function () {
+            if (s.visible)
+                return;
+            s.visible = true;
+            s.draw();
+            var canvas = document.getElementById("sprite".concat(n));
+            if (canvas == null)
+                return;
+            canvas.style.visibility = 'visible';
+        };
+        s.hide = function () {
+            if (!s.visible)
+                return;
+            s.visible = false;
+            var canvas = document.getElementById("sprite".concat(n));
+            if (canvas == null)
+                return;
+            canvas.style.visibility = 'hidden';
+        };
+        s.size = function (doubleX, doubleY) {
+            s._doubleX = doubleX;
+            s._doubleY = doubleY;
+            if (s.visible)
+                s.draw();
+        };
+        s.draw = function () {
+            var canvas = document.getElementById("sprite".concat(n));
+            if (canvas == null)
+                return;
+            var width = 24 * (s._doubleX ? 2 : 1);
+            var height = 21 * (s._doubleY ? 2 : 1);
+            canvas.style.width = "".concat(width, "px");
+            canvas.style.height = "".concat(height, "px");
+            canvas.width = width;
+            canvas.height = height;
+            var ctx = canvas.getContext("2d");
+            var imgData = ctx.getImageData(0, 0, width, height);
+            var bitmap = imgData.data;
+            for (var x = 0; x < width; ++x) {
+                for (var y = 0; y < height; ++y) {
+                    var srcX = (s._doubleX) ? (x >> 1) : x;
+                    var srcY = (s._doubleY) ? (y >> 1) : y;
+                    var src = srcY * 3 + (srcX >> 3);
+                    var mask = 1 << (7 - (srcX & 7));
+                    var dest = (x + y * width) * 4;
+                    if (s.visible && s._image != null && (s._image[src] & mask) != 0) {
+                        bitmap[dest + 0] = _this.palette[s._color][0];
+                        bitmap[dest + 1] = _this.palette[s._color][1];
+                        bitmap[dest + 2] = _this.palette[s._color][2];
+                        bitmap[dest + 3] = 255;
+                    }
+                    else {
+                        bitmap[dest + 0] = 0;
+                        bitmap[dest + 1] = 0;
+                        bitmap[dest + 2] = 0;
+                        bitmap[dest + 3] = 0;
+                    }
+                }
+            }
+            ctx.putImageData(imgData, 0, 0, 0, 0, width, height);
+        };
+        return s;
+    };
+    CbmishConsole.prototype.hideSprites = function () {
+        for (var _i = 0, _a = this.sprites; _i < _a.length; _i++) {
+            var sprite = _a[_i];
+            if (sprite.visible)
+                sprite.hide();
+        }
     };
     return CbmishConsole;
 }());
