@@ -1,3 +1,7 @@
+// sample.ts - Demo code simulating an 8-bit classic system
+// Copyright (c) 2022-2023 by David R. Van Wagner
+// github.com/davervw/cbmish-script
+// davevw.com
 var cbm = new CbmishConsole();
 cbm.CbmishConsole();
 cbm.removeButtons();

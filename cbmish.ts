@@ -1,6 +1,6 @@
 // cbmish.ts
 // Console (display output) that has features resembling an 8-bit classic system
-// Copyright (c) 2022 by David R. Van Wagner
+// Copyright (c) 2022-2023 by David R. Van Wagner
 // github.com/davervw/cbmish-script
 // davevw.com
 
