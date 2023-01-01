@@ -96,10 +96,11 @@ class CbmishConsole {
 
     public CbmishConsole() {
         const consoleElement = document.getElementsByTagName('console')[0];
-        consoleElement.innerHTML = '<canvas class="border"></canvas><canvas class="background"></canvas><canvas class="foreground" width="320" height="200"></canvas><canvas id="sprite1" width="24" height="21" style="visibility: hidden;"></canvas><canvas id="sprite0" width="24" height="21" style="visibility: hidden;"></canvas>';
-        const foregroundCanvas = consoleElement.getElementsByClassName("foreground")[0] as HTMLCanvasElement;
-        const height = Number.parseInt(foregroundCanvas.getAttribute('height'));
-        const width = Number.parseInt(foregroundCanvas.getAttribute('width'));
+        consoleElement.innerHTML = '<canvas class="border"></canvas><canvas class="background"></canvas><canvas class="foreground" width="320" height="200"></canvas><canvas class="sprites" width="320" height="200"></canvas>';
+        const foregroundCanvas = consoleElement.getElementsByClassName("foreground")[0] as HTMLCanvasElement; 
+        const topCanvas = consoleElement.getElementsByClassName("sprites")[0] as HTMLCanvasElement;
+        const height = Number.parseInt(topCanvas.getAttribute('height'));
+        const width = Number.parseInt(topCanvas.getAttribute('width'));
         this.rows = Math.floor(height / 8);
         this.cols = Math.floor(width / 8);
         this.ctx = foregroundCanvas.getContext("2d");
@@ -109,9 +110,9 @@ class CbmishConsole {
         window.addEventListener('keypress', (event: KeyboardEvent) => { this.keypress(event); });
         window.addEventListener('keydown', (event: KeyboardEvent) => { if (this.keydown(event.key, event.shiftKey, event.ctrlKey, event.altKey)) event.preventDefault(); });
         window.addEventListener('keyup', (event: KeyboardEvent) => { this.keyup(event.key, event.shiftKey, event.ctrlKey, event.altKey); });
-        foregroundCanvas.addEventListener('click', (event: MouseEvent) => this.onclickcanvas(event), false);
-        foregroundCanvas.addEventListener('mousemove', (event: MouseEvent) => this.onmousemovecanvas(event), false);
-        foregroundCanvas.addEventListener('mouseleave', (event: MouseEvent) => this.onmouseleavecanvas(event), false);
+        topCanvas.addEventListener('click', (event: MouseEvent) => this.onclickcanvas(event), false);
+        topCanvas.addEventListener('mousemove', (event: MouseEvent) => this.onmousemovecanvas(event), false);
+        topCanvas.addEventListener('mouseleave', (event: MouseEvent) => this.onmouseleavecanvas(event), false);
         this.checkStartupButton();
         this.checkFullScreen();
         for (let i=0; i<8; ++i)
@@ -1432,87 +1433,41 @@ class CbmishConsole {
             move: null,
             show: null,
             hide: null,
-            draw: null,
             size: null,
             visible: false
         };
         s.color = (c: number) => { 
             s._color = c; 
             if (s.visible)
-                s.draw();
+                this.drawSprites();
         }
         s.image = (imageSource: number[]) => {
             s._image = imageSource;
             if (s.visible)
-                s.draw();
+                this.drawSprites();
         }
         s.move = (x: number, y: number) => {
-            // note: origin on C64 is (left=25,top=51), our css origin is (left=30px; top=25px;)
-            const canvas: any = document.getElementById(`sprite${n}`);
             s._x = x;
             s._y = y;
-            canvas.style.left = `${30+(s._x-25)}px`;
-            canvas.style.top = `${25+(s._y-51)}px`;
+            this.drawSprites();
         }
         s.show = () => {
             if (s.visible)
                 return;
             s.visible = true;
-            s.draw();
-            const canvas = document.getElementById(`sprite${n}`) as HTMLCanvasElement;
-            if (canvas == null)
-                return;
-            canvas.style.visibility = 'visible';
+            this.drawSprites();
         }
         s.hide = () => {
             if (!s.visible)
                 return;
             s.visible = false;
-            const canvas = document.getElementById(`sprite${n}`) as HTMLCanvasElement;
-            if (canvas == null)
-                return;
-            canvas.style.visibility = 'hidden';
+            this.drawSprites();
         }
         s.size = (doubleX: boolean, doubleY: boolean) => {
             s._doubleX = doubleX;
             s._doubleY = doubleY;
             if (s.visible)
-                s.draw();
-        }
-        s.draw = () => {
-            const canvas = document.getElementById(`sprite${n}`) as HTMLCanvasElement;
-            if (canvas == null)
-                return;
-            const width = 24 * (s._doubleX ? 2 : 1);
-            const height = 21 * (s._doubleY ? 2 : 1);
-            canvas.style.width = `${width}px`;
-            canvas.style.height = `${height}px`;
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext("2d");
-            const imgData = ctx.getImageData(0, 0, width, height);
-            const bitmap = imgData.data;
-            for (let x = 0; x < width; ++x) {
-                for (let y = 0; y < height; ++y) {
-                    let srcX = (s._doubleX) ? (x >> 1) : x;
-                    let srcY = (s._doubleY) ? (y >> 1) : y;                    
-                    const src = srcY * 3 + (srcX >> 3);
-                    const mask = 1 << (7 - (srcX & 7));
-                    const dest = (x + y * width) * 4;
-                    if (s.visible && s._image != null && (s._image[src] & mask) != 0) {
-                        bitmap[dest + 0] = this.palette[s._color][0];
-                        bitmap[dest + 1] = this.palette[s._color][1];
-                        bitmap[dest + 2] = this.palette[s._color][2];
-                        bitmap[dest + 3] = 255;
-                    } else {
-                        bitmap[dest + 0] = 0;
-                        bitmap[dest + 1] = 0;
-                        bitmap[dest + 2] = 0;
-                        bitmap[dest + 3] = 0;
-                    }
-                }
-            }
-            ctx.putImageData(imgData, 0, 0, 0, 0, width, height);
+                this.drawSprites();
         }
         return s;
     }
@@ -1522,5 +1477,49 @@ class CbmishConsole {
             if (sprite.visible)
                 sprite.hide();
         }
+    }
+
+    public drawSprites() {
+        const canvas = document.getElementsByClassName("sprites")[0] as HTMLCanvasElement;
+        if (canvas == null)
+            return;
+                    
+        const canvasWidth = Number.parseInt(canvas.getAttribute('width'));
+        const canvasHeight = Number.parseInt(canvas.getAttribute('height'));
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        const imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+        const bitmap = imgData.data;
+
+        const originX = 25;
+        const originY = 51;
+
+        for (let i=this.sprites.length-1; i>=0; --i) {
+            const sprite = this.sprites[i];
+
+            const spriteWidth = 24 * (sprite._doubleX ? 2 : 1);
+            const spriteHeight = 21 * (sprite._doubleY ? 2 : 1);
+
+            for (let x = 0; x < spriteWidth; ++x) {
+                for (let y = 0; y < spriteHeight; ++y) {
+                    let srcX = (sprite._doubleX) ? (x >> 1) : x;
+                    let srcY = (sprite._doubleY) ? (y >> 1) : y;                    
+                    const src = srcY * 3 + (srcX >> 3);
+                    const mask = 1 << (7 - (srcX & 7));
+                    let destX = (sprite._x - originX + x);
+                    let destY = (sprite._y - originY + y);
+                    if (destX < 0 || destX >= canvasWidth || destY < 0 || destY >= canvasHeight)
+                        continue;
+                    const dest = (destX + destY * canvasWidth) * 4;
+                    if (sprite.visible && sprite._image != null && (sprite._image[src] & mask) != 0) {
+                        bitmap[dest + 0] = this.palette[sprite._color][0];
+                        bitmap[dest + 1] = this.palette[sprite._color][1];
+                        bitmap[dest + 2] = this.palette[sprite._color][2];
+                        bitmap[dest + 3] = 255;
+                    }
+                }
+            }
+        }
+        ctx.putImageData(imgData, 0, 0, 0, 0, canvasWidth, canvasHeight);
     }
 }

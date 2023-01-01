@@ -88,10 +88,11 @@ var CbmishConsole = /** @class */ (function () {
     CbmishConsole.prototype.CbmishConsole = function () {
         var _this = this;
         var consoleElement = document.getElementsByTagName('console')[0];
-        consoleElement.innerHTML = '<canvas class="border"></canvas><canvas class="background"></canvas><canvas class="foreground" width="320" height="200"></canvas><canvas id="sprite1" width="24" height="21" style="visibility: hidden;"></canvas><canvas id="sprite0" width="24" height="21" style="visibility: hidden;"></canvas>';
+        consoleElement.innerHTML = '<canvas class="border"></canvas><canvas class="background"></canvas><canvas class="foreground" width="320" height="200"></canvas><canvas class="sprites" width="320" height="200"></canvas>';
         var foregroundCanvas = consoleElement.getElementsByClassName("foreground")[0];
-        var height = Number.parseInt(foregroundCanvas.getAttribute('height'));
-        var width = Number.parseInt(foregroundCanvas.getAttribute('width'));
+        var topCanvas = consoleElement.getElementsByClassName("sprites")[0];
+        var height = Number.parseInt(topCanvas.getAttribute('height'));
+        var width = Number.parseInt(topCanvas.getAttribute('width'));
         this.rows = Math.floor(height / 8);
         this.cols = Math.floor(width / 8);
         this.ctx = foregroundCanvas.getContext("2d");
@@ -102,9 +103,9 @@ var CbmishConsole = /** @class */ (function () {
         window.addEventListener('keydown', function (event) { if (_this.keydown(event.key, event.shiftKey, event.ctrlKey, event.altKey))
             event.preventDefault(); });
         window.addEventListener('keyup', function (event) { _this.keyup(event.key, event.shiftKey, event.ctrlKey, event.altKey); });
-        foregroundCanvas.addEventListener('click', function (event) { return _this.onclickcanvas(event); }, false);
-        foregroundCanvas.addEventListener('mousemove', function (event) { return _this.onmousemovecanvas(event); }, false);
-        foregroundCanvas.addEventListener('mouseleave', function (event) { return _this.onmouseleavecanvas(event); }, false);
+        topCanvas.addEventListener('click', function (event) { return _this.onclickcanvas(event); }, false);
+        topCanvas.addEventListener('mousemove', function (event) { return _this.onmousemovecanvas(event); }, false);
+        topCanvas.addEventListener('mouseleave', function (event) { return _this.onmouseleavecanvas(event); }, false);
         this.checkStartupButton();
         this.checkFullScreen();
         for (var i = 0; i < 8; ++i)
@@ -1324,88 +1325,41 @@ var CbmishConsole = /** @class */ (function () {
             move: null,
             show: null,
             hide: null,
-            draw: null,
             size: null,
             visible: false
         };
         s.color = function (c) {
             s._color = c;
             if (s.visible)
-                s.draw();
+                _this.drawSprites();
         };
         s.image = function (imageSource) {
             s._image = imageSource;
             if (s.visible)
-                s.draw();
+                _this.drawSprites();
         };
         s.move = function (x, y) {
-            // note: origin on C64 is (left=25,top=51), our css origin is (left=30px; top=25px;)
-            var canvas = document.getElementById("sprite".concat(n));
             s._x = x;
             s._y = y;
-            canvas.style.left = "".concat(30 + (s._x - 25), "px");
-            canvas.style.top = "".concat(25 + (s._y - 51), "px");
+            _this.drawSprites();
         };
         s.show = function () {
             if (s.visible)
                 return;
             s.visible = true;
-            s.draw();
-            var canvas = document.getElementById("sprite".concat(n));
-            if (canvas == null)
-                return;
-            canvas.style.visibility = 'visible';
+            _this.drawSprites();
         };
         s.hide = function () {
             if (!s.visible)
                 return;
             s.visible = false;
-            var canvas = document.getElementById("sprite".concat(n));
-            if (canvas == null)
-                return;
-            canvas.style.visibility = 'hidden';
+            _this.drawSprites();
         };
         s.size = function (doubleX, doubleY) {
             s._doubleX = doubleX;
             s._doubleY = doubleY;
             if (s.visible)
-                s.draw();
-        };
-        s.draw = function () {
-            var canvas = document.getElementById("sprite".concat(n));
-            if (canvas == null)
-                return;
-            var width = 24 * (s._doubleX ? 2 : 1);
-            var height = 21 * (s._doubleY ? 2 : 1);
-            canvas.style.width = "".concat(width, "px");
-            canvas.style.height = "".concat(height, "px");
-            canvas.width = width;
-            canvas.height = height;
-            var ctx = canvas.getContext("2d");
-            var imgData = ctx.getImageData(0, 0, width, height);
-            var bitmap = imgData.data;
-            for (var x = 0; x < width; ++x) {
-                for (var y = 0; y < height; ++y) {
-                    var srcX = (s._doubleX) ? (x >> 1) : x;
-                    var srcY = (s._doubleY) ? (y >> 1) : y;
-                    var src = srcY * 3 + (srcX >> 3);
-                    var mask = 1 << (7 - (srcX & 7));
-                    var dest = (x + y * width) * 4;
-                    if (s.visible && s._image != null && (s._image[src] & mask) != 0) {
-                        bitmap[dest + 0] = _this.palette[s._color][0];
-                        bitmap[dest + 1] = _this.palette[s._color][1];
-                        bitmap[dest + 2] = _this.palette[s._color][2];
-                        bitmap[dest + 3] = 255;
-                    }
-                    else {
-                        bitmap[dest + 0] = 0;
-                        bitmap[dest + 1] = 0;
-                        bitmap[dest + 2] = 0;
-                        bitmap[dest + 3] = 0;
-                    }
-                }
-            }
-            ctx.putImageData(imgData, 0, 0, 0, 0, width, height);
+                _this.drawSprites();
         };
         return s;
     };
@@ -1415,6 +1369,44 @@ var CbmishConsole = /** @class */ (function () {
             if (sprite.visible)
                 sprite.hide();
         }
+    };
+    CbmishConsole.prototype.drawSprites = function () {
+        var canvas = document.getElementsByClassName("sprites")[0];
+        if (canvas == null)
+            return;
+        var canvasWidth = Number.parseInt(canvas.getAttribute('width'));
+        var canvasHeight = Number.parseInt(canvas.getAttribute('height'));
+        var ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        var imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+        var bitmap = imgData.data;
+        var originX = 25;
+        var originY = 51;
+        for (var i = this.sprites.length - 1; i >= 0; --i) {
+            var sprite = this.sprites[i];
+            var spriteWidth = 24 * (sprite._doubleX ? 2 : 1);
+            var spriteHeight = 21 * (sprite._doubleY ? 2 : 1);
+            for (var x = 0; x < spriteWidth; ++x) {
+                for (var y = 0; y < spriteHeight; ++y) {
+                    var srcX = (sprite._doubleX) ? (x >> 1) : x;
+                    var srcY = (sprite._doubleY) ? (y >> 1) : y;
+                    var src = srcY * 3 + (srcX >> 3);
+                    var mask = 1 << (7 - (srcX & 7));
+                    var destX = (sprite._x - originX + x);
+                    var destY = (sprite._y - originY + y);
+                    if (destX < 0 || destX >= canvasWidth || destY < 0 || destY >= canvasHeight)
+                        continue;
+                    var dest = (destX + destY * canvasWidth) * 4;
+                    if (sprite.visible && sprite._image != null && (sprite._image[src] & mask) != 0) {
+                        bitmap[dest + 0] = this.palette[sprite._color][0];
+                        bitmap[dest + 1] = this.palette[sprite._color][1];
+                        bitmap[dest + 2] = this.palette[sprite._color][2];
+                        bitmap[dest + 3] = 255;
+                    }
+                }
+            }
+        }
+        ctx.putImageData(imgData, 0, 0, 0, 0, canvasWidth, canvasHeight);
     };
     return CbmishConsole;
 }());

@@ -44,29 +44,12 @@ console .foreground {
     margin: 0;
 }
 
-console #sprite0 {
+console .sprites {
     background-color: transparent;
-    /* outline-color: white; */
-    /* outline-style: auto; */
     position: absolute;
-    height: 21px;
-    width: 24px;
-    aspect-ratio: auto 24 / 21;
-    top: 25px;
-    left: 30px;
-    border: 0;
-    padding: 0;
-    margin: 0;
-}
-
-console #sprite1 {
-    background-color: transparent;
-    /* outline-color: white; */
-    /* outline-style: auto; */
-    position: absolute;
-    height: 21px;
-    width: 24px;
-    aspect-ratio: auto 24 / 21;
+    height: 200px;
+    width: 320px;
+    aspect-ratio: auto 320 / 200;
     top: 25px;
     left: 30px;
     border: 0;
