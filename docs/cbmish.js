@@ -23,6 +23,7 @@ var CbmishConsole = /** @class */ (function () {
         this.escapePressed = false;
         this.tabPressed = false;
         this.fullScreen = false;
+        this.fullScreenError = false;
         this.scale = 1;
         this.rows = 25;
         this.cols = 40;
@@ -1238,11 +1239,16 @@ var CbmishConsole = /** @class */ (function () {
         this.fullScreen = !this.fullScreen;
         if (this.fullScreen) {
             var element = document.getElementsByTagName('html')[0];
-            element.requestFullscreen().then(this.rescaleId = setInterval(function () { return _this.rescaleFullScreen(); }, 200) // TODO: handle resize event instead of 200ms delay
-            );
+            element.requestFullscreen()
+                .then(this.rescaleId = setInterval(function () { return _this.rescaleFullScreen(); }, 200)) // TODO: handle resize event instead of 200ms delay
+            ["catch"](function (err) { return _this.fullScreenError = true; });
         }
         else {
-            document.exitFullscreen().then(function () { return _this.rescale(); });
+            if (!this.fullScreenError)
+                document.exitFullscreen().then(function () { return _this.rescale(); });
+            else
+                this.rescale();
+            this.fullScreenError = false;
         }
     };
     CbmishConsole.prototype.rescale = function () {

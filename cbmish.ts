@@ -26,6 +26,7 @@ class CbmishConsole {
     private escapePressed: boolean = false;
     private tabPressed: boolean = false;
     private fullScreen: boolean = false;
+    private fullScreenError: boolean = false;
     private scale = 1;
 
     private rows = 25;
@@ -1333,11 +1334,15 @@ class CbmishConsole {
         this.fullScreen = !this.fullScreen;
         if (this.fullScreen) {
             let element: any = document.getElementsByTagName('html')[0];
-            element.requestFullscreen().then( 
-                this.rescaleId = setInterval( () => this.rescaleFullScreen(), 200) // TODO: handle resize event instead of 200ms delay
-            )
+            element.requestFullscreen()
+                .then(this.rescaleId = setInterval( () => this.rescaleFullScreen(), 200)) // TODO: handle resize event instead of 200ms delay
+                .catch((err) => this.fullScreenError = true )
         } else {
-            document.exitFullscreen().then( () => this.rescale() );
+            if (!this.fullScreenError)
+                document.exitFullscreen().then( () => this.rescale() );
+            else
+                this.rescale();
+            this.fullScreenError = false;
         }
     }
 
