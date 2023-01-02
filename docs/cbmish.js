@@ -1218,6 +1218,9 @@ var CbmishConsole = /** @class */ (function () {
         this.out('Blog:  ');
         this.foreground(14);
         this.addLink('davevw.com', 'http://www.davevw.com');
+        this.newLine();
+        this.newLine();
+        this.addLink('twitter.com/davervw', 'https://twitter.com/DaveRVW');
         this.foreground(15);
         this.locate(this.cols - 1, this.rows - 1);
         this.blinkCursor();

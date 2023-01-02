@@ -189,6 +189,8 @@ var dissolve = function () {
 };
 var loresPlotDemo = function () {
     cbm.clear();
+    cbm.locate(15, 23);
+    cbm.addLink('link: blog entry', 'https://techwithdave.davevw.com/2021/04/low-resolution-graphics-for-commodore.html');
     var n = Math.ceil(4 * Math.PI / 0.03) + 1;
     var i = 0;
     cbm.repeat(function () {
@@ -205,6 +207,9 @@ var loresSineWave = function () {
     cbm.foreground(7);
     cbm.largeText('HELLO');
     cbm.largeText('CBM!');
+    cbm.foreground(14);
+    cbm.locate(22, 22);
+    cbm.addLink('link: tweet', 'https://twitter.com/DaveRVW/status/1547040376367636480');
     cbm.foreground(0);
     for (var x_1 = 0; x_1 < 80; ++x_1)
         cbm.loresPlot(x_1, 25); // centered horizontal line
@@ -284,6 +289,9 @@ var dragonDemo = function () {
     cbm.findButton('X').color = 0;
     cbm.redrawButtons();
     cbm.hideCursor();
+    cbm.locate(2, 23);
+    cbm.addLink('link: orig. knight/dragon blog entry', 'https://techwithdave.davevw.com/2022/08/knight-vs-dragon-prototype-on-commodore.html');
+    cbm.homeScreen();
     var knight = cbm.sprites[0];
     var dragon = cbm.sprites[1];
     knight.image(knightImage);

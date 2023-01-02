@@ -216,6 +216,8 @@ const dissolve = function () {
 
 const loresPlotDemo = function () {
     cbm.clear();
+    cbm.locate(15, 23);
+    cbm.addLink('link: blog entry', 'https://techwithdave.davevw.com/2021/04/low-resolution-graphics-for-commodore.html');
     let n = Math.ceil(4*Math.PI/0.03) + 1;
     let i = 0;
     cbm.repeat( () => {
@@ -233,6 +235,9 @@ const loresSineWave = function () {
     cbm.foreground(7);
     cbm.largeText('HELLO');
     cbm.largeText('CBM!');
+    cbm.foreground(14);
+    cbm.locate(22, 22);
+    cbm.addLink('link: tweet', 'https://twitter.com/DaveRVW/status/1547040376367636480');
     cbm.foreground(0);
     for (let x=0; x<80; ++x)
         cbm.loresPlot(x, 25); // centered horizontal line
@@ -316,7 +321,10 @@ const dragonDemo = function () {
     cbm.findButton('X').color = 0;
     cbm.redrawButtons();
     cbm.hideCursor();
-    
+    cbm.locate(2, 23);
+    cbm.addLink('link: orig. knight/dragon blog entry', 'https://techwithdave.davevw.com/2022/08/knight-vs-dragon-prototype-on-commodore.html');
+    cbm.homeScreen();
+
     let knight = cbm.sprites[0];
     let dragon = cbm.sprites[1];
 
