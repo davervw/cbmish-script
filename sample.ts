@@ -337,7 +337,15 @@ const dragonDemo = function () {
 
     const random0to4 = () => { return Math.floor(Math.random()*5); }
 
+    let collisions: number[] = [];
+
+    cbm.onSpriteCollision = (collisionSprites: number[]) => {
+        collisions = collisionSprites;
+    }
+
     cbm.repeat( () => {
+        collisions = [];
+
         switch (random0to4()) {
             case 1: 
                 if (knight._x > 0) 
@@ -373,6 +381,12 @@ const dragonDemo = function () {
                     dragon.move(dragon._x, dragon._y+5);
                 break;
         }
+
+        if (collisions.length == 2)
+            cbm.border(2);
+        else
+            cbm.border(3);
+
     }, null, 100);
 }
 

@@ -297,7 +297,12 @@ var dragonDemo = function () {
     knight.show();
     dragon.show();
     var random0to4 = function () { return Math.floor(Math.random() * 5); };
+    var collisions = [];
+    cbm.onSpriteCollision = function (collisionSprites) {
+        collisions = collisionSprites;
+    };
     cbm.repeat(function () {
+        collisions = [];
         switch (random0to4()) {
             case 1:
                 if (knight._x > 0)
@@ -333,6 +338,10 @@ var dragonDemo = function () {
                     dragon.move(dragon._x, dragon._y + 5);
                 break;
         }
+        if (collisions.length == 2)
+            cbm.border(2);
+        else
+            cbm.border(3);
     }, null, 100);
 };
 mainMenu();

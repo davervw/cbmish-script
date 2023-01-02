@@ -84,6 +84,9 @@ var CbmishConsole = /** @class */ (function () {
         this.loresChars = [32, 126, 124, 226, 123, 97, 255, 236,
             108, 127, 225, 251, 98, 252, 254, 160];
         this.checkStartupIntervalId = -1;
+        this.onSpriteCollision = function (collisionSprites) {
+            //console.log(`onSpriteCollision(${JSON.stringify(collisionSprites)})`);
+        };
     }
     CbmishConsole.prototype.CbmishConsole = function () {
         var _this = this;
@@ -1380,6 +1383,9 @@ var CbmishConsole = /** @class */ (function () {
         ctx.clearRect(0, 0, canvasWidth, canvasHeight);
         var imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
         var bitmap = imgData.data;
+        var collisionBitmap = new Map();
+        var collisionSprites = [];
+        //let collisionBackground = [];
         var originX = 25;
         var originY = 51;
         for (var i = this.sprites.length - 1; i >= 0; --i) {
@@ -1402,11 +1408,30 @@ var CbmishConsole = /** @class */ (function () {
                         bitmap[dest + 1] = this.palette[sprite._color][1];
                         bitmap[dest + 2] = this.palette[sprite._color][2];
                         bitmap[dest + 3] = 255;
+                        var point = "".concat(destX, ",").concat(destY);
+                        if (collisionBitmap.has(point)) {
+                            var pointCollisions = collisionBitmap.get(point);
+                            if (pointCollisions.length == 1) {
+                                if (collisionSprites.indexOf(pointCollisions[0]) < 0)
+                                    collisionSprites.push(pointCollisions[0]);
+                            }
+                            else if (pointCollisions.indexOf(i) < 0) {
+                                pointCollisions.push(i);
+                                collisionBitmap.set(point, pointCollisions);
+                            }
+                            if (collisionSprites.indexOf(i) < 0)
+                                collisionSprites.push(i);
+                        }
+                        else {
+                            collisionBitmap.set(point, [i]);
+                        }
                     }
                 }
             }
         }
         ctx.putImageData(imgData, 0, 0, 0, 0, canvasWidth, canvasHeight);
+        if (collisionSprites.length != 0)
+            this.onSpriteCollision(collisionSprites.sort());
     };
     return CbmishConsole;
 }());

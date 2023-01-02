@@ -1490,6 +1490,9 @@ class CbmishConsole {
         ctx.clearRect(0, 0, canvasWidth, canvasHeight);
         const imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
         const bitmap = imgData.data;
+        let collisionBitmap = new Map();
+        let collisionSprites = [];
+        //let collisionBackground = [];
 
         const originX = 25;
         const originY = 51;
@@ -1516,10 +1519,32 @@ class CbmishConsole {
                         bitmap[dest + 1] = this.palette[sprite._color][1];
                         bitmap[dest + 2] = this.palette[sprite._color][2];
                         bitmap[dest + 3] = 255;
+
+                        const point = `${destX},${destY}`;
+                        if (collisionBitmap.has(point)) {
+                            let pointCollisions = collisionBitmap.get(point);
+                            if (pointCollisions.length == 1) {
+                                if (collisionSprites.indexOf(pointCollisions[0]) < 0)
+                                    collisionSprites.push(pointCollisions[0]);
+                            } else if (pointCollisions.indexOf(i) < 0) {
+                                pointCollisions.push(i);
+                                collisionBitmap.set(point, pointCollisions);
+                            }
+                            if (collisionSprites.indexOf(i) < 0)
+                                collisionSprites.push(i);
+                        } else {
+                            collisionBitmap.set(point, [i]);
+                        }
                     }
                 }
             }
         }
         ctx.putImageData(imgData, 0, 0, 0, 0, canvasWidth, canvasHeight);
+        if (collisionSprites.length != 0)
+            this.onSpriteCollision(collisionSprites.sort());
+    }
+
+    public onSpriteCollision = (collisionSprites: number[]) => {
+        //console.log(`onSpriteCollision(${JSON.stringify(collisionSprites)})`);
     }
 }
