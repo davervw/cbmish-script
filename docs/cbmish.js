@@ -1382,7 +1382,8 @@ var CbmishConsole = /** @class */ (function () {
             return;
         var canvasWidth = Number.parseInt(canvas.getAttribute('width'));
         var canvasHeight = Number.parseInt(canvas.getAttribute('height'));
-        var ctx = canvas.getContext("2d");
+        var ctx = canvas.getContext("2d", { willReadFrequently: true });
+        var attrs = ctx.getContextAttributes();
         ctx.clearRect(0, 0, canvasWidth, canvasHeight);
         var imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
         var bitmap = imgData.data;
