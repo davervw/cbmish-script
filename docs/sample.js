@@ -2,6 +2,15 @@
 // Copyright (c) 2022-2023 by David R. Van Wagner
 // github.com/davervw/cbmish-script
 // davevw.com
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
 var cbm = new CbmishConsole();
 cbm.CbmishConsole();
 cbm.removeButtons();
@@ -451,10 +460,11 @@ var dotsMove = function () {
 var dotsCreateSprites = function () {
     var origin = { x: 24, y: 50 };
     cbm.hideSprites();
-    var image = dotSpriteImage();
+    var circle = dotSpriteImage();
     var color = 0;
     var _loop_1 = function (i) {
         var sprite = cbm.sprites[i];
+        var image = spriteXorWithNumber(circle, i);
         sprite.image(image);
         if (color == cbm.getBackground())
             ++color;
@@ -502,6 +512,27 @@ var dotSpriteImage = function () {
         image.push(Number.parseInt(s.slice(8, 16), 2));
         image.push(Number.parseInt(s.slice(16, 24), 2));
     }
+    return image;
+};
+var spriteXorWithNumber = function (image, n) {
+    image = __spreadArray([], image, true); // make copy for modification
+    var s = "".concat(n);
+    if (/^[0-9]$/.test(s)) { // one digit
+        var iFont = s.charCodeAt(0) * 8;
+        for (var i = 0; i < 8; ++i)
+            image[(8 + i) * 3 + 1] ^= c64_char_rom[iFont + i];
+    }
+    else if (/^[0-9][0-9]$/.test(s)) { // two digits
+        var iFont0 = s.charCodeAt(0) * 8;
+        var iFont1 = s.charCodeAt(1) * 8;
+        for (var i = 0; i < 8; ++i) {
+            image[(8 + i) * 3 + 0] ^= c64_char_rom[iFont0 + i] >> 4;
+            image[(8 + i) * 3 + 1] ^= ((c64_char_rom[iFont0 + i] & 15) << 4) | (c64_char_rom[iFont1 + i] >> 4);
+            image[(8 + i) * 3 + 2] ^= (c64_char_rom[iFont1 + i] & 15) << 4;
+        }
+    }
+    else
+        throw "expected one or two digit number, not ".concat(n);
     return image;
 };
 mainMenu();

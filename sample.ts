@@ -510,10 +510,11 @@ const dotsMove = function() {
 const dotsCreateSprites = function() {
     let origin = { x: 24, y: 50}
     cbm.hideSprites();
-    const image = dotSpriteImage();
+    const circle = dotSpriteImage();
     let color = 0;
     for (let i=0; i<cbm.sprites.length; ++i) {
         let sprite = cbm.sprites[i];
+        const image = spriteXorWithNumber(circle, i);
         sprite.image(image);
         if (color == cbm.getBackground())
             ++color;
@@ -559,6 +560,26 @@ const dotSpriteImage = function () {
         image.push(Number.parseInt(s.slice(8, 16), 2));
         image.push(Number.parseInt(s.slice(16, 24), 2));
     }
+    return image;
+}
+
+const spriteXorWithNumber = function(image: number[], n: number): number[] {
+    image = [...image]; // make copy for modification
+    const s = `${n}`;
+    if (/^[0-9]$/.test(s)) { // one digit
+        const iFont = s.charCodeAt(0) * 8;
+        for (let i=0; i<8; ++i)
+            image[(8+i)*3+1] ^= c64_char_rom[iFont+i];
+    } else if (/^[0-9][0-9]$/.test(s)) { // two digits
+        const iFont0 = s.charCodeAt(0) * 8;
+        const iFont1 = s.charCodeAt(1) * 8;
+        for (let i=0; i<8; ++i) {
+            image[(8+i)*3+0] ^= c64_char_rom[iFont0+i] >> 4;
+            image[(8+i)*3+1] ^= ((c64_char_rom[iFont0+i] & 15) << 4) | (c64_char_rom[iFont1+i] >> 4);
+            image[(8+i)*3+2] ^= (c64_char_rom[iFont1+i] & 15) << 4;
+        }
+    } else
+        throw `expected one or two digit number, not ${n}`;
     return image;
 }
 
