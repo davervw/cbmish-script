@@ -1327,7 +1327,7 @@ var CbmishConsole = /** @class */ (function () {
         value = params.get('scale');
         if (!/^[0-9]+(\.[0-9]+)?$/.test(value))
             return;
-        this.scale = Number.parseInt(value);
+        this.scale = Number.parseFloat(value);
         this.rescale();
     };
     CbmishConsole.prototype.spriteFactory = function (n) {
