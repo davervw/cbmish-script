@@ -384,7 +384,8 @@ var dots = function () {
         cbm.largeText('Simulating');
         cbm.newLine();
         cbm.foreground(7);
-        cbm.largeText('  Sprites');
+        cbm.out('  ');
+        cbm.largeText(' Sprites');
         cbm.newLine();
         cbm.foreground(1);
         cbm.largeText('    in');
