@@ -111,7 +111,7 @@ var CbmishConsole = /** @class */ (function () {
         topCanvas.addEventListener('mousemove', function (event) { return _this.onmousemovecanvas(event); }, false);
         topCanvas.addEventListener('mouseleave', function (event) { return _this.onmouseleavecanvas(event); }, false);
         this.checkStartupButton();
-        this.checkFullScreen();
+        this.checkFullScreenThenScale();
         for (var i = 0; i < 8; ++i)
             this.sprites.push(this.spriteFactory(i));
     };
@@ -1317,11 +1317,18 @@ var CbmishConsole = /** @class */ (function () {
                     button.onclick();
             }, 250);
     };
-    CbmishConsole.prototype.checkFullScreen = function () {
+    CbmishConsole.prototype.checkFullScreenThenScale = function () {
         var params = new URLSearchParams(window.location.search);
         var value = params.get('fullScreen');
-        if (value == 'true')
+        if (value == 'true') {
             this.toggleFullScreen();
+            return;
+        }
+        value = params.get('scale');
+        if (!/^[0-9]+(\.[0-9]+)?$/.test(value))
+            return;
+        this.scale = Number.parseInt(value);
+        this.rescale();
     };
     CbmishConsole.prototype.spriteFactory = function (n) {
         var _this = this;

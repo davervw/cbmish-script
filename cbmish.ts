@@ -115,7 +115,7 @@ class CbmishConsole {
         topCanvas.addEventListener('mousemove', (event: MouseEvent) => this.onmousemovecanvas(event), false);
         topCanvas.addEventListener('mouseleave', (event: MouseEvent) => this.onmouseleavecanvas(event), false);
         this.checkStartupButton();
-        this.checkFullScreen();
+        this.checkFullScreenThenScale();
         for (let i=0; i<8; ++i)
             this.sprites.push(this.spriteFactory(i));
     }
@@ -1421,11 +1421,18 @@ class CbmishConsole {
             }, 250);        
     }
 
-    private checkFullScreen() {
+    private checkFullScreenThenScale() {
         let params = new URLSearchParams(window.location.search);
         let value = params.get('fullScreen');
-        if (value == 'true')
+        if (value == 'true') {
             this.toggleFullScreen();
+            return;
+        }
+        value = params.get('scale');
+        if (!/^[0-9]+(\.[0-9]+)?$/.test(value))
+            return;
+        this.scale = Number.parseInt(value);
+        this.rescale();
     }
 
     private spriteFactory(n: number) {
