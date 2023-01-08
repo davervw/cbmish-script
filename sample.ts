@@ -466,7 +466,7 @@ const dotsMoveLoop = function() {
     //         };
     //     }
     // }
-    cbm.repeat( () => { dotsMove() }, undefined, 1 );
+    cbm.repeat( () => { dotsMove() }, undefined, 20 );
 }
 
 const dotsMove = function() {

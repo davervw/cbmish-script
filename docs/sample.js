@@ -414,7 +414,7 @@ var dotsMoveLoop = function () {
     //         };
     //     }
     // }
-    cbm.repeat(function () { dotsMove(); }, undefined, 1);
+    cbm.repeat(function () { dotsMove(); }, undefined, 20);
 };
 var dotsMove = function () {
     var origin = { x: 24, y: 50 };
