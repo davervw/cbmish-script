@@ -424,6 +424,32 @@ let dotsVectors = [
 
 const dots = function() {
     cbm.clear();
+
+    const promotion = true;
+    if (promotion) {
+        cbm.newLine();
+        cbm.newLine();
+        cbm.newLine();
+        cbm.foreground(3);
+        cbm.largeText('Simulating')
+        cbm.newLine();
+        cbm.foreground(7);
+        cbm.largeText('  Sprites');
+        cbm.newLine();
+        cbm.foreground(1);
+        cbm.largeText('    in');
+        cbm.newLine();
+        cbm.foreground(10);
+        cbm.largeText('TypeScript');
+        cbm.newLine();
+        cbm.locate(1, 23);
+        cbm.foreground(15);
+        cbm.out(`${cbm.chr$(18)}ONLY${cbm.chr$(146)} LOOKS like a C64 `);
+        cbm.foreground(14);
+        cbm.underline(3);
+        cbm.addLink('github: cbmish', 'https://github.com/davervw/cbmish-script');
+    }
+
     dotsCreateSprites();
     dotsMoveLoop();
 }
