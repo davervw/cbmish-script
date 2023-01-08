@@ -546,7 +546,7 @@ const dotSpriteImage = function () {
     let image: number[] = [];
     for (let i = 0; i < height; i += 1) {
         const y = i - radius;
-        const angle = Math.sinh(y / radius);
+        const angle = Math.asin(y / radius);
         const x = Math.floor(radius * Math.cos(angle));
         let s = "00";
         for (let j = 0; j < Math.floor(radius - x); ++j)
