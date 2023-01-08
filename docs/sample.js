@@ -381,6 +381,7 @@ var dots = function () {
         cbm.newLine();
         cbm.newLine();
         cbm.foreground(3);
+        cbm.out(cbm.chr$(14)); // upper/lowercase
         cbm.largeText('Simulating');
         cbm.newLine();
         cbm.foreground(7);
@@ -399,30 +400,25 @@ var dots = function () {
         cbm.foreground(14);
         cbm.underline(3);
         cbm.addLink('github: cbmish', 'https://github.com/davervw/cbmish-script');
+        cbm.homeScreen();
     }
     dotsCreateSprites();
     dotsMoveLoop();
 };
+var dotsCollision = [];
 var dotsMoveLoop = function () {
-    // cbm.onSpriteCollision = (collisionSprites: number[]) => {
-    //     for (let i of collisionSprites) {
-    //         let sprite = cbm.sprites[i];
-    //         sprite.x -= dotsVectors[i].xd;
-    //         sprite.y -= dotsVectors[i].yd;
-    //         dotsVectors[i] = {
-    //             xd : Math.floor(Math.random()*11 - 5),
-    //             yd : Math.floor(Math.random()*11 - 5),
-    //         };
-    //     }
-    // }
+    cbm.onSpriteCollision = function (spriteCollision) { dotsCollision = spriteCollision; };
     cbm.repeat(function () { dotsMove(); }, undefined, 20);
 };
 var dotsMove = function () {
     var origin = { x: 24, y: 50 };
     for (var i = 0; i < cbm.sprites.length; ++i) {
         var sprite = cbm.sprites[i];
+        var oldPosition = { x: sprite._x, y: sprite._y };
+        // calculate new position
         var x = sprite._x + dotsVectors[i].xd;
         var y = sprite._y + dotsVectors[i].yd;
+        // check off screen
         if (x < origin.x || x >= origin.x + 320 - 24) {
             dotsVectors[i].xd = -dotsVectors[i].xd;
             x = sprite._x + dotsVectors[i].xd;
@@ -431,7 +427,22 @@ var dotsMove = function () {
             dotsVectors[i].yd = -dotsVectors[i].yd;
             y = sprite._y + dotsVectors[i].yd;
         }
+        // move and test collision
+        dotsCollision = [];
         sprite.move(x, y);
+        if (dotsCollision.includes(i)) {
+            sprite.move(oldPosition.x, oldPosition.y);
+            // randomize vectors so sprites go somewhere else
+            for (var _i = 0, dotsCollision_1 = dotsCollision; _i < dotsCollision_1.length; _i++) {
+                var j = dotsCollision_1[_i];
+                do {
+                    dotsVectors[j] = {
+                        xd: Math.floor(Math.random() * 11 - 5),
+                        yd: Math.floor(Math.random() * 11 - 5)
+                    };
+                } while (dotsVectors[j].xd == 0 && dotsVectors[j].yd == 0);
+            }
+        }
     }
 };
 var dotsCreateSprites = function () {

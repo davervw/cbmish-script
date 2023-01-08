@@ -431,6 +431,7 @@ const dots = function() {
         cbm.newLine();
         cbm.newLine();
         cbm.foreground(3);
+        cbm.out(cbm.chr$(14)); // upper/lowercase
         cbm.largeText('Simulating')
         cbm.newLine();
         cbm.foreground(7);
@@ -449,24 +450,17 @@ const dots = function() {
         cbm.foreground(14);
         cbm.underline(3);
         cbm.addLink('github: cbmish', 'https://github.com/davervw/cbmish-script');
+        cbm.homeScreen();
     }
 
     dotsCreateSprites();
     dotsMoveLoop();
 }
 
+let dotsCollision: number[] = [];
+
 const dotsMoveLoop = function() {
-    // cbm.onSpriteCollision = (collisionSprites: number[]) => {
-    //     for (let i of collisionSprites) {
-    //         let sprite = cbm.sprites[i];
-    //         sprite.x -= dotsVectors[i].xd;
-    //         sprite.y -= dotsVectors[i].yd;
-    //         dotsVectors[i] = {
-    //             xd : Math.floor(Math.random()*11 - 5),
-    //             yd : Math.floor(Math.random()*11 - 5),
-    //         };
-    //     }
-    // }
+    cbm.onSpriteCollision = (spriteCollision: number[]) => { dotsCollision = spriteCollision; }
     cbm.repeat( () => { dotsMove() }, undefined, 20 );
 }
 
@@ -474,8 +468,14 @@ const dotsMove = function() {
     let origin = { x: 24, y: 50}
     for (let i=0; i<cbm.sprites.length; ++i) {
         let sprite = cbm.sprites[i];
+        
+        let oldPosition = { x: sprite._x, y: sprite._y };
+        
+        // calculate new position
         let x = sprite._x + dotsVectors[i].xd;
         let y = sprite._y + dotsVectors[i].yd;
+
+        // check off screen
         if (x < origin.x || x >= origin.x + 320-24) {
             dotsVectors[i].xd = -dotsVectors[i].xd;
             x = sprite._x + dotsVectors[i].xd;
@@ -484,7 +484,24 @@ const dotsMove = function() {
             dotsVectors[i].yd = -dotsVectors[i].yd;
             y = sprite._y + dotsVectors[i].yd;
         }
+
+        // move and test collision
+        dotsCollision = [];
         sprite.move(x, y);
+        
+        if (dotsCollision.includes(i)) {
+            sprite.move(oldPosition.x, oldPosition.y);
+
+            // randomize vectors so sprites go somewhere else
+            for (let j of dotsCollision) {
+                do {
+                    dotsVectors[j] = {
+                        xd: Math.floor(Math.random() * 11 - 5),
+                        yd: Math.floor(Math.random() * 11 - 5),
+                    };
+                } while (dotsVectors[j].xd == 0 && dotsVectors[j].yd == 0);
+            }
+        }
     }
 }
 
