@@ -152,6 +152,19 @@ const mainMenu = function() {
             }, 250);
     }
 
+    cbm.locate(b6.right+2, y);
+    cbm.fg = 4;
+    const b12 = cbm.addButton("Dots   ");
+    b12.onclick = () => {
+        setTimeout(
+            () => {
+                cbm.removeButtons();
+                cbm.fg = 1;
+                dots();
+                addleave();
+            }, 250);
+    }
+
     cbm.locate(0, 7);
     cbm.foreground(14);
     cbm.blinkCursor();
@@ -396,6 +409,110 @@ const dragonDemo = function () {
             cbm.border(3);
 
     }, null, 100);
+}
+
+let dotsVectors = [
+    { xd: 0, yd: 0},
+    { xd: 0, yd: 0},
+    { xd: 0, yd: 0},
+    { xd: 0, yd: 0},
+    { xd: 0, yd: 0},
+    { xd: 0, yd: 0},
+    { xd: 0, yd: 0},
+    { xd: 0, yd: 0},
+]
+
+const dots = function() {
+    cbm.clear();
+    dotsCreateSprites();
+    dotsMoveLoop();
+}
+
+const dotsMoveLoop = function() {
+    // cbm.onSpriteCollision = (collisionSprites: number[]) => {
+    //     for (let i of collisionSprites) {
+    //         let sprite = cbm.sprites[i];
+    //         sprite.x -= dotsVectors[i].xd;
+    //         sprite.y -= dotsVectors[i].yd;
+    //         dotsVectors[i] = {
+    //             xd : Math.floor(Math.random()*11 - 5),
+    //             yd : Math.floor(Math.random()*11 - 5),
+    //         };
+    //     }
+    // }
+    cbm.repeat( () => { dotsMove() }, undefined, 20 );
+}
+
+const dotsMove = function() {
+    let origin = { x: 24, y: 50}
+    for (let i=0; i<8; ++i) {
+        let sprite = cbm.sprites[i];
+        let x = sprite._x + dotsVectors[i].xd;
+        let y = sprite._y + dotsVectors[i].yd;
+        if (x < origin.x || x >= origin.x + 320-24) {
+            dotsVectors[i].xd = -dotsVectors[i].xd;
+            x = sprite._x + dotsVectors[i].xd;
+        }
+        if (y < origin.y || y >= origin.y + 200-21) {
+            dotsVectors[i].yd = -dotsVectors[i].yd;
+            y = sprite._y + dotsVectors[i].yd;
+        }
+        sprite.move(x, y);
+    }
+}
+
+const dotsCreateSprites = function() {
+    let origin = { x: 24, y: 50}
+    cbm.hideSprites();
+    const image = dotSpriteImage();
+    let color = 0;
+    for (let i=0; i<8; ++i) {
+        let sprite = cbm.sprites[i];
+        sprite.image(image);
+        if (color == cbm.getBackground())
+            ++color;
+        sprite.color(color++);
+        sprite.size(false, false);
+        cbm.onSpriteCollision = (_) => {
+            let x = origin.x+Math.random()*(320-24);
+            let y = origin.y+Math.random()*(200-21);
+            sprite.move(x,y);
+        }
+        let x = origin.x+Math.random()*(320-24);
+        let y = origin.y+Math.random()*(200-21);
+        sprite.move(x,y);
+        do {
+            dotsVectors[i] = {
+                xd: Math.floor(Math.random() * 11 - 5),
+                yd: Math.floor(Math.random() * 11 - 5),
+            };
+        } while (dotsVectors[i].xd == 0 || dotsVectors[i].yd == 0);
+        sprite.show();
+    }
+    cbm.onSpriteCollision = (_) => null;
+}
+
+const dotSpriteImage = function () {
+    const width = 24;
+    const height = 21;
+    const radius = height / 2;
+    let image: number[] = [];
+    for (let i = 0; i < height; i += 1) {
+        const y = i - radius;
+        const angle = Math.sinh(y / radius);
+        const x = Math.floor(radius * Math.cos(angle));
+        let s = "00";
+        for (let j = 0; j < Math.floor(radius - x); ++j)
+            s += '0'
+        for (let j = 0; j < x; ++j)
+            s += '11';
+        while (s.length < width)
+            s += '0';
+        image.push(Number.parseInt(s.slice(0, 8), 2));
+        image.push(Number.parseInt(s.slice(8, 16), 2));
+        image.push(Number.parseInt(s.slice(16, 24), 2));
+    }
+    return image;
 }
 
 mainMenu();
