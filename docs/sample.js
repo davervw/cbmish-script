@@ -414,11 +414,11 @@ var dotsMoveLoop = function () {
     //         };
     //     }
     // }
-    cbm.repeat(function () { dotsMove(); }, undefined, 20);
+    cbm.repeat(function () { dotsMove(); }, undefined, 1);
 };
 var dotsMove = function () {
     var origin = { x: 24, y: 50 };
-    for (var i = 0; i < 8; ++i) {
+    for (var i = 0; i < cbm.sprites.length; ++i) {
         var sprite = cbm.sprites[i];
         var x = sprite._x + dotsVectors[i].xd;
         var y = sprite._y + dotsVectors[i].yd;
@@ -443,7 +443,8 @@ var dotsCreateSprites = function () {
         sprite.image(image);
         if (color == cbm.getBackground())
             ++color;
-        sprite.color(color++);
+        sprite.color(color);
+        color = (color + 1) & 15;
         sprite.size(false, false);
         cbm.onSpriteCollision = function (_) {
             var x = origin.x + Math.random() * (320 - 24);
@@ -461,7 +462,7 @@ var dotsCreateSprites = function () {
         } while (dotsVectors[i].xd == 0 || dotsVectors[i].yd == 0);
         sprite.show();
     };
-    for (var i = 0; i < 8; ++i) {
+    for (var i = 0; i < cbm.sprites.length; ++i) {
         _loop_1(i);
     }
     cbm.onSpriteCollision = function (_) { return null; };

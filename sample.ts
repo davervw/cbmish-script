@@ -466,12 +466,12 @@ const dotsMoveLoop = function() {
     //         };
     //     }
     // }
-    cbm.repeat( () => { dotsMove() }, undefined, 20 );
+    cbm.repeat( () => { dotsMove() }, undefined, 1 );
 }
 
 const dotsMove = function() {
     let origin = { x: 24, y: 50}
-    for (let i=0; i<8; ++i) {
+    for (let i=0; i<cbm.sprites.length; ++i) {
         let sprite = cbm.sprites[i];
         let x = sprite._x + dotsVectors[i].xd;
         let y = sprite._y + dotsVectors[i].yd;
@@ -492,12 +492,13 @@ const dotsCreateSprites = function() {
     cbm.hideSprites();
     const image = dotSpriteImage();
     let color = 0;
-    for (let i=0; i<8; ++i) {
+    for (let i=0; i<cbm.sprites.length; ++i) {
         let sprite = cbm.sprites[i];
         sprite.image(image);
         if (color == cbm.getBackground())
             ++color;
-        sprite.color(color++);
+        sprite.color(color);
+        color = (color + 1) & 15;
         sprite.size(false, false);
         cbm.onSpriteCollision = (_) => {
             let x = origin.x+Math.random()*(320-24);
