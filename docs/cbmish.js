@@ -1351,8 +1351,8 @@ var CbmishConsole = /** @class */ (function () {
                 _this.drawSprites();
         };
         s.move = function (x, y) {
-            s._x = x;
-            s._y = y;
+            s._x = Math.floor(x);
+            s._y = Math.floor(y);
             _this.drawSprites();
         };
         s.show = function () {

@@ -1455,8 +1455,8 @@ class CbmishConsole {
                 this.drawSprites();
         }
         s.move = (x: number, y: number) => {
-            s._x = x;
-            s._y = y;
+            s._x = Math.floor(x);
+            s._y = Math.floor(y);
             this.drawSprites();
         }
         s.show = () => {
