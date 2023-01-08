@@ -375,6 +375,11 @@ var dotsVectors = [
 ];
 var dots = function () {
     cbm.clear();
+    dotsForegroundText();
+    dotsCreateSprites();
+    dotsMoveLoop();
+};
+var dotsForegroundText = function () {
     var promotion = true;
     if (promotion) {
         cbm.newLine();
@@ -402,8 +407,6 @@ var dots = function () {
         cbm.addLink('github: cbmish', 'https://github.com/davervw/cbmish-script');
         cbm.homeScreen();
     }
-    dotsCreateSprites();
-    dotsMoveLoop();
 };
 var dotsCollision = [];
 var dotsMoveLoop = function () {
