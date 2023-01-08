@@ -1018,6 +1018,8 @@ var CbmishConsole = /** @class */ (function () {
         if (this.buttons.length == 0)
             return;
         var wasBlinking = this.hideCursor();
+        var wasReverse = this.reverse;
+        this.reverse = false;
         var saveRowCol = this.locate(0, 0);
         var saveColor = this.fg;
         for (var _i = 0, _a = this.buttons; _i < _a.length; _i++) {
@@ -1031,6 +1033,7 @@ var CbmishConsole = /** @class */ (function () {
         }
         this.fg = saveColor;
         this.row = saveRowCol[0], this.col = saveRowCol[1];
+        this.reverse = wasReverse;
         if (wasBlinking)
             this.blinkCursor();
     };

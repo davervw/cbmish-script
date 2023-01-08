@@ -1089,6 +1089,8 @@ class CbmishConsole {
         if (this.buttons.length == 0)
             return;
         const wasBlinking = this.hideCursor();
+        const wasReverse = this.reverse;
+        this.reverse = false;
         const saveRowCol = this.locate(0, 0);
         const saveColor = this.fg;
         for (let button of this.buttons) {
@@ -1101,6 +1103,7 @@ class CbmishConsole {
         }
         this.fg = saveColor;
         [this.row, this.col] = saveRowCol;
+        this.reverse = wasReverse;
         if (wasBlinking)
             this.blinkCursor();
     }
