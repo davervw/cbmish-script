@@ -326,7 +326,7 @@ var dragonDemo = function () {
     dragon.show();
     var random0to4 = function () { return Math.floor(Math.random() * 5); };
     var collisions = [];
-    cbm.onSpriteCollision = function (collisionSprites) {
+    cbm.onSpriteCollision = function (collisionSprites, collisionBackground) {
         collisions = collisionSprites;
     };
     cbm.repeat(function () {
@@ -389,7 +389,7 @@ var dots = function () {
     dotsMoveLoop();
 };
 var dotsForegroundText = function () {
-    var promotion = true;
+    var promotion = false;
     if (promotion) {
         cbm.newLine();
         cbm.newLine();
@@ -416,10 +416,22 @@ var dotsForegroundText = function () {
         cbm.addLink('github: cbmish', 'https://github.com/davervw/cbmish-script');
         cbm.homeScreen();
     }
+    else {
+        cbm.foreground(15);
+        cbm.out(cbm.chr$(18));
+        for (var y = 8; y < 16; ++y) {
+            cbm.locate(20, y);
+            cbm.out("".concat(cbm.chr$(18), " "));
+        }
+        cbm.out(cbm.chr$(146));
+    }
 };
 var dotsCollision = [];
 var dotsMoveLoop = function () {
-    cbm.onSpriteCollision = function (spriteCollision) { dotsCollision = spriteCollision; };
+    cbm.onSpriteCollision = function (collisionSprites, collisionBackground) {
+        var collisionSet = new Set(__spreadArray(__spreadArray([], collisionSprites, true), collisionBackground, true));
+        dotsCollision = Array.from(collisionSet);
+    };
     cbm.repeat(function () { dotsMove(); }, undefined, 20);
 };
 var dotsMove = function () {
@@ -452,10 +464,34 @@ var dotsMove = function () {
                         xd: Math.floor(Math.random() * 11 - 5),
                         yd: Math.floor(Math.random() * 11 - 5)
                     };
+                    cbm.sprites[j]._color = sprite._color;
                 } while (dotsVectors[j].xd == 0 && dotsVectors[j].yd == 0);
             }
+            dotsCheckResetColors();
         }
     }
+};
+var dotsResetId = undefined;
+var dotsCheckResetColors = function () {
+    var _this = this;
+    if (this.dotsResetId != null)
+        return; // already set to reset, wait
+    var colors = new Set();
+    cbm.sprites.forEach(function (sprite) { return colors.add(sprite._color); });
+    if (colors.size > 1)
+        return; // multiple colors so don't reset yet
+    // if got here, then all dots are the same color
+    this.dotsResetId = setTimeout(function () {
+        // reset colors
+        var color = 0;
+        cbm.sprites.forEach(function (sprite) {
+            if (color == cbm.getBackground())
+                color = (color + 1) & 15;
+            sprite.color(color);
+            color = (color + 1) & 15;
+        });
+        _this.dotsResetId = null;
+    }, 3000);
 };
 var dotsCreateSprites = function () {
     var origin = { x: 24, y: 50 };
@@ -471,7 +507,7 @@ var dotsCreateSprites = function () {
         sprite.color(color);
         color = (color + 1) & 15;
         sprite.size(false, false);
-        cbm.onSpriteCollision = function (_) {
+        cbm.onSpriteCollision = function (_1, _2) {
             var x = origin.x + Math.random() * (320 - 24);
             var y = origin.y + Math.random() * (200 - 21);
             sprite.move(x, y);
@@ -485,12 +521,14 @@ var dotsCreateSprites = function () {
                 yd: Math.floor(Math.random() * 11 - 5)
             };
         } while (dotsVectors[i].xd == 0 || dotsVectors[i].yd == 0);
+        if ((i & 1) == 1)
+            sprite.sendToBack();
         sprite.show();
     };
     for (var i = 0; i < cbm.sprites.length; ++i) {
         _loop_1(i);
     }
-    cbm.onSpriteCollision = function (_) { return null; };
+    cbm.onSpriteCollision = function (_1, _2) { return null; };
 };
 var dotSpriteImage = function () {
     var width = 24;

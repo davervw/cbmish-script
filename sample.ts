@@ -360,7 +360,7 @@ const dragonDemo = function () {
 
     let collisions: number[] = [];
 
-    cbm.onSpriteCollision = (collisionSprites: number[]) => {
+    cbm.onSpriteCollision = (collisionSprites: number[], collisionBackground: number[]) => {
         collisions = collisionSprites;
     }
 
@@ -430,7 +430,7 @@ const dots = function() {
 }
 
 const dotsForegroundText = function() {
-    const promotion = true;
+    const promotion = false;
     if (promotion) {
         cbm.newLine();
         cbm.newLine();
@@ -456,13 +456,24 @@ const dotsForegroundText = function() {
         cbm.underline(3);
         cbm.addLink('github: cbmish', 'https://github.com/davervw/cbmish-script');
         cbm.homeScreen();
+    } else {
+        cbm.foreground(15);
+        cbm.out(cbm.chr$(18));
+        for (let y=8; y<16; ++y) {
+            cbm.locate(20, y);
+            cbm.out(`${cbm.chr$(18)} `);
+        }
+        cbm.out(cbm.chr$(146));
     }
 }
 
 let dotsCollision: number[] = [];
 
 const dotsMoveLoop = function() {
-    cbm.onSpriteCollision = (spriteCollision: number[]) => { dotsCollision = spriteCollision; }
+    cbm.onSpriteCollision = (collisionSprites: number[], collisionBackground: number[]) => {
+        const collisionSet = new Set([...collisionSprites, ...collisionBackground]);
+        dotsCollision = Array.from(collisionSet);
+    }
     cbm.repeat( () => { dotsMove() }, undefined, 20 );
 }
 
@@ -501,10 +512,38 @@ const dotsMove = function() {
                         xd: Math.floor(Math.random() * 11 - 5),
                         yd: Math.floor(Math.random() * 11 - 5),
                     };
+                    cbm.sprites[j]._color = sprite._color;
                 } while (dotsVectors[j].xd == 0 && dotsVectors[j].yd == 0);
             }
+            dotsCheckResetColors();
         }
     }
+}
+
+let dotsResetId = undefined;
+
+const dotsCheckResetColors = function() {
+    if (this.dotsResetId != null)
+        return; // already set to reset, wait
+
+    const colors = new Set();
+    cbm.sprites.forEach((sprite) => colors.add(sprite._color) );
+    if (colors.size > 1)
+        return; // multiple colors so don't reset yet
+
+    // if got here, then all dots are the same color
+
+    this.dotsResetId = setTimeout(() => {
+        // reset colors
+        let color = 0;
+        cbm.sprites.forEach((sprite) => {
+            if (color == cbm.getBackground())
+                color = (color + 1) & 15;
+            sprite.color(color);
+            color = (color + 1) & 15;
+        });
+        this.dotsResetId = null;
+    }, 3000);
 }
 
 const dotsCreateSprites = function() {
@@ -521,7 +560,7 @@ const dotsCreateSprites = function() {
         sprite.color(color);
         color = (color + 1) & 15;
         sprite.size(false, false);
-        cbm.onSpriteCollision = (_) => {
+        cbm.onSpriteCollision = (_1, _2) => {
             let x = origin.x+Math.random()*(320-24);
             let y = origin.y+Math.random()*(200-21);
             sprite.move(x,y);
@@ -535,9 +574,11 @@ const dotsCreateSprites = function() {
                 yd: Math.floor(Math.random() * 11 - 5),
             };
         } while (dotsVectors[i].xd == 0 || dotsVectors[i].yd == 0);
+        if ((i & 1) == 1)
+            sprite.sendToBack();
         sprite.show();
     }
-    cbm.onSpriteCollision = (_) => null;
+    cbm.onSpriteCollision = (_1, _2) => null;
 }
 
 const dotSpriteImage = function () {

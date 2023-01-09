@@ -85,8 +85,8 @@ var CbmishConsole = /** @class */ (function () {
         this.loresChars = [32, 126, 124, 226, 123, 97, 255, 236,
             108, 127, 225, 251, 98, 252, 254, 160];
         this.checkStartupIntervalId = -1;
-        this.onSpriteCollision = function (collisionSprites) {
-            //console.log(`onSpriteCollision(${JSON.stringify(collisionSprites)})`);
+        this.onSpriteCollision = function (collisionSprites, collisionBackground) {
+            //console.log(`onSpriteCollision(${JSON.stringify(collisionSprites)}, ${JSON.stringify(collisionBackground)})`);
         };
     }
     CbmishConsole.prototype.CbmishConsole = function () {
@@ -495,6 +495,24 @@ var CbmishConsole = /** @class */ (function () {
         if (this.dirtywidth == 0 || this.dirtyheight == 0)
             return;
         this.ctx.putImageData(this.imgData, 0, 0, this.dirtyx, this.dirtyy, this.dirtywidth, this.dirtyheight);
+        // check for possible sprite / foreground overlap requiring redraw of sprites (sprite pixels may need to be transparent to show foreground)        
+        var backVisibleSprites = this.sprites.filter(function (sprite) { return !sprite._top && sprite._visible; });
+        var needToRedrawSprites = false;
+        for (var _i = 0, backVisibleSprites_1 = backVisibleSprites; _i < backVisibleSprites_1.length; _i++) {
+            var sprite = backVisibleSprites_1[_i];
+            var box = {
+                x: this.dirtyx,
+                y: this.dirtyy,
+                width: this.dirtywidth,
+                height: this.dirtyheight
+            };
+            if (sprite.overlapsWithBox(box)) {
+                needToRedrawSprites = true;
+                break;
+            }
+        }
+        if (needToRedrawSprites)
+            this.drawSprites();
         this.dirtyx = 0;
         this.dirtyy = 0;
         this.dirtywidth = 0;
@@ -1342,22 +1360,26 @@ var CbmishConsole = /** @class */ (function () {
             _doubleY: false,
             _x: 0,
             _y: 0,
+            _top: true,
+            _visible: false,
             color: null,
             image: null,
             move: null,
             show: null,
             hide: null,
             size: null,
-            visible: false
+            sendToBack: null,
+            bringToFront: null,
+            overlapsWithBox: null
         };
         s.color = function (c) {
             s._color = c;
-            if (s.visible)
+            if (s._visible)
                 _this.drawSprites();
         };
         s.image = function (imageSource) {
             s._image = imageSource;
-            if (s.visible)
+            if (s._visible)
                 _this.drawSprites();
         };
         s.move = function (x, y) {
@@ -1366,29 +1388,54 @@ var CbmishConsole = /** @class */ (function () {
             _this.drawSprites();
         };
         s.show = function () {
-            if (s.visible)
+            if (s._visible)
                 return;
-            s.visible = true;
+            s._visible = true;
             _this.drawSprites();
         };
         s.hide = function () {
-            if (!s.visible)
+            if (!s._visible)
                 return;
-            s.visible = false;
+            s._visible = false;
             _this.drawSprites();
         };
         s.size = function (doubleX, doubleY) {
             s._doubleX = doubleX;
             s._doubleY = doubleY;
-            if (s.visible)
+            if (s._visible)
                 _this.drawSprites();
+        };
+        s.sendToBack = function () {
+            s._top = false;
+            if (s._visible)
+                _this.drawSprites();
+        };
+        s.bringToFront = function () {
+            s._top = true;
+            if (s._visible)
+                _this.drawSprites();
+        };
+        s.overlapsWithBox = function (box) {
+            var origin = { x: 25, y: 51 };
+            box.x += origin.x;
+            box.y += origin.y;
+            // any one corner of box is within limits of the sprite
+            // or any corner of sprite is within limits of the box
+            return box.x >= s._x && box.x < s._x + 24 && box.y >= s._y && box.y < s._y + 21
+                || box.x + box.width - 1 >= s._x && box.x + box.width - 1 < s._x + 24 && box.y >= s._y && box.y < s._y + 21
+                || box.x >= s._x && box.x < s._x + 24 && box.y + box.height - 1 >= s._y && box.y + box.height - 1 < s._y + 21
+                || box.x + box.width - 1 >= s._x && box.x + box.width - 1 < s._x + 24 && box.y + box.height - 1 >= s._y && box.y + box.height - 1 < s._y + 21
+                || s._x >= box.x && s._x < box.x + box.width && s._y >= box.y && s._y < box.y + box.height
+                || s._x + 23 >= box.x && s._x + 23 < box.x + box.width && s._y >= box.y && s._y < box.y + box.height
+                || s._x >= box.x && s._x < box.x + box.width && s._y + 20 >= box.y && s._y + 20 < box.y + box.height
+                || s._x + 23 >= box.x && s._x + 23 < box.x + box.width && s._y + 20 >= box.y && s._y + 20 < box.y + box.height;
         };
         return s;
     };
     CbmishConsole.prototype.hideSprites = function () {
         for (var _i = 0, _a = this.sprites; _i < _a.length; _i++) {
             var sprite = _a[_i];
-            if (sprite.visible)
+            if (sprite._visible)
                 sprite.hide();
         }
     };
@@ -1403,9 +1450,9 @@ var CbmishConsole = /** @class */ (function () {
         ctx.clearRect(0, 0, canvasWidth, canvasHeight);
         var imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
         var bitmap = imgData.data;
-        var collisionBitmap = new Map();
+        var pointToSpriteNumber = new Map();
         var collisionSprites = [];
-        //let collisionBackground = [];
+        var collisionBackground = [];
         var originX = 25;
         var originY = 51;
         for (var i = this.sprites.length - 1; i >= 0; --i) {
@@ -1423,35 +1470,38 @@ var CbmishConsole = /** @class */ (function () {
                     if (destX < 0 || destX >= canvasWidth || destY < 0 || destY >= canvasHeight)
                         continue;
                     var dest = (destX + destY * canvasWidth) * 4;
-                    if (sprite.visible && sprite._image != null && (sprite._image[src] & mask) != 0) {
+                    var foregroundPixelDrawn = (this.bitmap[dest + 3] == 255);
+                    if (sprite._visible && sprite._image != null && (sprite._image[src] & mask) != 0) {
+                        // draw sprite pixel
+                        var showForeground = false;
+                        if (!sprite._top)
+                            showForeground = foregroundPixelDrawn;
                         bitmap[dest + 0] = this.palette[sprite._color][0];
                         bitmap[dest + 1] = this.palette[sprite._color][1];
                         bitmap[dest + 2] = this.palette[sprite._color][2];
-                        bitmap[dest + 3] = 255;
-                        var point = "".concat(destX, ",").concat(destY);
-                        if (collisionBitmap.has(point)) {
-                            var pointCollisions = collisionBitmap.get(point);
-                            if (pointCollisions.length == 1) {
-                                if (collisionSprites.indexOf(pointCollisions[0]) < 0)
-                                    collisionSprites.push(pointCollisions[0]);
+                        bitmap[dest + 3] = (showForeground) ? 0 : 255;
+                        if (this.onSpriteCollision != null) {
+                            var point = "".concat(destX, ",").concat(destY);
+                            if (pointToSpriteNumber.has(point)) {
+                                var pointSpriteNumber = pointToSpriteNumber.get(point);
+                                if (!collisionSprites.includes(pointSpriteNumber))
+                                    collisionSprites.push(pointSpriteNumber);
+                                if (!collisionSprites.includes(i))
+                                    collisionSprites.push(i);
                             }
-                            else if (pointCollisions.indexOf(i) < 0) {
-                                pointCollisions.push(i);
-                                collisionBitmap.set(point, pointCollisions);
+                            else {
+                                pointToSpriteNumber.set(point, i);
                             }
-                            if (collisionSprites.indexOf(i) < 0)
-                                collisionSprites.push(i);
-                        }
-                        else {
-                            collisionBitmap.set(point, [i]);
+                            if (foregroundPixelDrawn && !collisionBackground.includes(i))
+                                collisionBackground.push(i);
                         }
                     }
                 }
             }
         }
         ctx.putImageData(imgData, 0, 0, 0, 0, canvasWidth, canvasHeight);
-        if (collisionSprites.length != 0)
-            this.onSpriteCollision(collisionSprites.sort());
+        if (collisionSprites.length + collisionBackground.length != 0 && this.onSpriteCollision != null)
+            this.onSpriteCollision(collisionSprites.sort(), collisionBackground.sort());
     };
     return CbmishConsole;
 }());
