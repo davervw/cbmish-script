@@ -287,6 +287,10 @@ var CbmishConsole = /** @class */ (function () {
     };
     CbmishConsole.prototype.clear = function () {
         var wasBlinking = this.hideCursor();
+        var wasReverse = this.reverse;
+        var wasUnderlined = this.underlined;
+        this.reverse = false;
+        this.underlined = false;
         this.eraseButtons();
         this.homeScreen();
         var limit = this.rows * this.cols - 1; // one less to avoid scroll
@@ -298,6 +302,8 @@ var CbmishConsole = /** @class */ (function () {
         this.redrawButtons();
         if (wasBlinking)
             this.blinkCursor();
+        this.reverse = wasReverse;
+        this.underlined = wasUnderlined;
     };
     CbmishConsole.prototype.homeScreen = function () {
         var wasBlinking = this.hideCursor();

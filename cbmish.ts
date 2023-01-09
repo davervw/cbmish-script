@@ -314,7 +314,11 @@ class CbmishConsole {
     }
 
     public clear() {
-        let wasBlinking = this.hideCursor();
+        const wasBlinking = this.hideCursor();
+        const wasReverse = this.reverse;
+        const wasUnderlined = this.underlined;
+        this.reverse = false;
+        this.underlined = false;
         this.eraseButtons();
 
         this.homeScreen();
@@ -328,6 +332,8 @@ class CbmishConsole {
         this.redrawButtons();
         if (wasBlinking)
             this.blinkCursor();
+        this.reverse = wasReverse;
+        this.underlined = wasUnderlined;
     }
 
     public homeScreen() {
