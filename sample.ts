@@ -624,4 +624,14 @@ const spriteXorWithNumber = function(image: number[], n: number): number[] {
     return image;
 }
 
+const consoleElement = document.getElementsByTagName('console')[0];
+const topCanvas = consoleElement.getElementsByClassName("sprites")[0] as HTMLCanvasElement;
+topCanvas.addEventListener('dblclick', (event: MouseEvent) => toggleBlinkingCursor(), false);
+
+const toggleBlinkingCursor = function() {
+    const blink = !cbm.hideCursor();
+    if (blink)
+        cbm.blinkCursor();
+}
+
 mainMenu();

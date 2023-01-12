@@ -573,5 +573,13 @@ var spriteXorWithNumber = function (image, n) {
         throw "expected one or two digit number, not ".concat(n);
     return image;
 };
+var consoleElement = document.getElementsByTagName('console')[0];
+var topCanvas = consoleElement.getElementsByClassName("sprites")[0];
+topCanvas.addEventListener('dblclick', function (event) { return toggleBlinkingCursor(); }, false);
+var toggleBlinkingCursor = function () {
+    var blink = !cbm.hideCursor();
+    if (blink)
+        cbm.blinkCursor();
+};
 mainMenu();
 //# sourceMappingURL=sample.js.map
