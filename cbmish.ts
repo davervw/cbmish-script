@@ -29,6 +29,7 @@ class CbmishConsole {
     private fullScreenError: boolean = false;
     private scale = 1;
 
+    private mouseScale = { x: 8, y: 8};
     private rows = 25;
     private cols = 40;
     private ctx: CanvasRenderingContext2D;
@@ -95,15 +96,20 @@ class CbmishConsole {
         { 'key': '=', 'code': 166 },
     ];
 
-    public CbmishConsole() {
+    public CbmishConsole(cols : number = 40, rows : number = 25) {
+        if (cols != null)
+            this.cols = Math.floor(cols);
+        if (rows != null)
+            this.rows = Math.floor(rows);
+        const width = 8 * Math.floor(this.cols);
+        const height = 8 * Math.floor(this.rows);
         const consoleElement = document.getElementsByTagName('console')[0];
-        consoleElement.innerHTML = '<canvas class="border"></canvas><canvas class="background"></canvas><canvas class="foreground" width="320" height="200"></canvas><canvas class="sprites" width="320" height="200"></canvas>';
+        consoleElement.innerHTML = `<canvas class="border"></canvas><canvas class="background"></canvas><canvas class="foreground" width="${width}" height="${height}"></canvas><canvas class="sprites" width="${width}" height="${height}"></canvas>`;
         const foregroundCanvas = consoleElement.getElementsByClassName("foreground")[0] as HTMLCanvasElement; 
         const topCanvas = consoleElement.getElementsByClassName("sprites")[0] as HTMLCanvasElement;
-        const height = Number.parseInt(topCanvas.getAttribute('height'));
-        const width = Number.parseInt(topCanvas.getAttribute('width'));
-        this.rows = Math.floor(height / 8);
-        this.cols = Math.floor(width / 8);
+        const foregroundSelector : any = document.querySelector(".foreground");
+        this.mouseScale.x = 8 * foregroundSelector.offsetWidth / foregroundCanvas.width;
+        this.mouseScale.y = 8 * foregroundSelector.offsetHeight / foregroundCanvas.height;
         this.ctx = foregroundCanvas.getContext("2d");
         this.imgData = this.ctx.getImageData(0, 0, this.cols*8, this.rows*8);
         this.bitmap = this.imgData.data;
@@ -475,7 +481,7 @@ class CbmishConsole {
     }
 
     private pokeScreen(address: number, value: number) {
-        if (address < 1024 || address >= 2024)
+        if (address < 1024 || address >= 1024 + this.rows*this.cols)
             return;
         if (value < 0 || value > 511)
             throw "expected value 0 to 511";
@@ -835,11 +841,11 @@ class CbmishConsole {
         this.reverse=false;
         for (let row = 0; row < 16; ++row) {
             for (let col = 0; col < 16; ++col) {
-                this.poke(1024 + col + (row + 8) * 40 + 4, col + row * 16);
-                this.poke(1024 + col + (row + 8) * 40 + 21, col + row * 16 + 256);
+                this.poke(1024 + col + (row + 8) * this.cols + 4, col + row * 16);
+                this.poke(1024 + col + (row + 8) * this.cols + 21, col + row * 16 + 256);
             }
         }
-        for (let i = 7 * 40; i < 1000; ++i)
+        for (let i = 7 * this.cols; i < this.cols*this.rows; ++i)
             this.poke(13.5 * 4096 + i, 1);
 
         this.foreground(14);
@@ -878,7 +884,7 @@ class CbmishConsole {
                     this.out(this.chr$(18)+this.chr$(64+i)+this.chr$(146));
             }
         }
-        for (let i = 7 * 40; i < 1000; ++i)
+        for (let i = 7 * this.cols; i < this.rows*this.cols; ++i)
             this.poke(13.5 * 4096 + i, 1);
 
         this.foreground(14);
@@ -907,9 +913,8 @@ class CbmishConsole {
     }
 
     private onclickcanvas(event: MouseEvent) {
-        const x = Math.floor(event.offsetX / 8);
-        const y = Math.floor(event.offsetY / 8);
-        //console.log(`click ${x},${y}`)
+        const x = Math.floor(event.offsetX / this.mouseScale.x);
+        const y = Math.floor(event.offsetY / this.mouseScale.y);
         let found = false;
         for (let button of this.buttons)
             if (button.checkClick(x, y))
@@ -920,17 +925,13 @@ class CbmishConsole {
     }
 
     private onmousemovecanvas(event: MouseEvent) {
-        const x = Math.floor(event.offsetX / 8);
-        const y = Math.floor(event.offsetY / 8);
-        //console.log(`mousemove ${x},${y}`)
+        const x = Math.floor(event.offsetX / this.mouseScale.x);
+        const y = Math.floor(event.offsetY / this.mouseScale.y);
         for (let button of this.buttons)
             button.checkMove(x, y);
     }
 
     private onmouseleavecanvas(event: MouseEvent) {
-        const x = Math.floor(event.offsetX / 8);
-        const y = Math.floor(event.offsetY / 8);
-        //console.log(`mouseleave ${x},${y}`)
         for (let button of this.buttons)
             button.checkLeave();
     }
@@ -1318,7 +1319,7 @@ class CbmishConsole {
             + 'The purpose is to be able to render\r'
             + 'various web content with this look &\r'
             + 'feel to retain the retro vibe, yet also\r'
-            + 'enable modern programming languages like'
+            + 'enable modern programming languages like'+this.chr$(157)+'\r'
             + 'TypeScript.\r'
             + '\r'
             + 'Open source:\r');
@@ -1626,5 +1627,21 @@ class CbmishConsole {
 
     public onSpriteCollision = (collisionSprites: number[], collisionBackground: number[]) => {
         //console.log(`onSpriteCollision(${JSON.stringify(collisionSprites)}, ${JSON.stringify(collisionBackground)})`);
+    }
+
+    public getCols() : number {
+        return this.cols;
+    }
+
+    public getRows() : number {
+        return this.rows;
+    }
+
+    public getWidth() : number {
+        return this.cols * 8;
+    }
+
+    public getHeight() : number {
+        return this.rows * 8;
     }
 }

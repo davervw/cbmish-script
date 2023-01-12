@@ -25,6 +25,7 @@ var CbmishConsole = /** @class */ (function () {
         this.fullScreen = false;
         this.fullScreenError = false;
         this.scale = 1;
+        this.mouseScale = { x: 8, y: 8 };
         this.rows = 25;
         this.cols = 40;
         this.charCells = [];
@@ -89,16 +90,23 @@ var CbmishConsole = /** @class */ (function () {
             //console.log(`onSpriteCollision(${JSON.stringify(collisionSprites)}, ${JSON.stringify(collisionBackground)})`);
         };
     }
-    CbmishConsole.prototype.CbmishConsole = function () {
+    CbmishConsole.prototype.CbmishConsole = function (cols, rows) {
         var _this = this;
+        if (cols === void 0) { cols = 40; }
+        if (rows === void 0) { rows = 25; }
+        if (cols != null)
+            this.cols = Math.floor(cols);
+        if (rows != null)
+            this.rows = Math.floor(rows);
+        var width = 8 * Math.floor(this.cols);
+        var height = 8 * Math.floor(this.rows);
         var consoleElement = document.getElementsByTagName('console')[0];
-        consoleElement.innerHTML = '<canvas class="border"></canvas><canvas class="background"></canvas><canvas class="foreground" width="320" height="200"></canvas><canvas class="sprites" width="320" height="200"></canvas>';
+        consoleElement.innerHTML = "<canvas class=\"border\"></canvas><canvas class=\"background\"></canvas><canvas class=\"foreground\" width=\"".concat(width, "\" height=\"").concat(height, "\"></canvas><canvas class=\"sprites\" width=\"").concat(width, "\" height=\"").concat(height, "\"></canvas>");
         var foregroundCanvas = consoleElement.getElementsByClassName("foreground")[0];
         var topCanvas = consoleElement.getElementsByClassName("sprites")[0];
-        var height = Number.parseInt(topCanvas.getAttribute('height'));
-        var width = Number.parseInt(topCanvas.getAttribute('width'));
-        this.rows = Math.floor(height / 8);
-        this.cols = Math.floor(width / 8);
+        var foregroundSelector = document.querySelector(".foreground");
+        this.mouseScale.x = 8 * foregroundSelector.offsetWidth / foregroundCanvas.width;
+        this.mouseScale.y = 8 * foregroundSelector.offsetHeight / foregroundCanvas.height;
         this.ctx = foregroundCanvas.getContext("2d");
         this.imgData = this.ctx.getImageData(0, 0, this.cols * 8, this.rows * 8);
         this.bitmap = this.imgData.data;
@@ -419,7 +427,7 @@ var CbmishConsole = /** @class */ (function () {
             this.blinkCursor();
     };
     CbmishConsole.prototype.pokeScreen = function (address, value) {
-        if (address < 1024 || address >= 2024)
+        if (address < 1024 || address >= 1024 + this.rows * this.cols)
             return;
         if (value < 0 || value > 511)
             throw "expected value 0 to 511";
@@ -774,11 +782,11 @@ var CbmishConsole = /** @class */ (function () {
         this.reverse = false;
         for (var row = 0; row < 16; ++row) {
             for (var col = 0; col < 16; ++col) {
-                this.poke(1024 + col + (row + 8) * 40 + 4, col + row * 16);
-                this.poke(1024 + col + (row + 8) * 40 + 21, col + row * 16 + 256);
+                this.poke(1024 + col + (row + 8) * this.cols + 4, col + row * 16);
+                this.poke(1024 + col + (row + 8) * this.cols + 21, col + row * 16 + 256);
             }
         }
-        for (var i = 7 * 40; i < 1000; ++i)
+        for (var i = 7 * this.cols; i < this.cols * this.rows; ++i)
             this.poke(13.5 * 4096 + i, 1);
         this.foreground(14);
         for (var i = 0; i < 16; ++i) {
@@ -815,7 +823,7 @@ var CbmishConsole = /** @class */ (function () {
                     this.out(this.chr$(18) + this.chr$(64 + i) + this.chr$(146));
             }
         }
-        for (var i = 7 * 40; i < 1000; ++i)
+        for (var i = 7 * this.cols; i < this.rows * this.cols; ++i)
             this.poke(13.5 * 4096 + i, 1);
         this.foreground(14);
         for (var i = 0; i < 16; ++i) {
@@ -843,9 +851,8 @@ var CbmishConsole = /** @class */ (function () {
         this.repeat(function () { return _this.out(_this.chr$(109.5 + Math.random())); }, this.cols * rows - 1, 0);
     };
     CbmishConsole.prototype.onclickcanvas = function (event) {
-        var x = Math.floor(event.offsetX / 8);
-        var y = Math.floor(event.offsetY / 8);
-        //console.log(`click ${x},${y}`)
+        var x = Math.floor(event.offsetX / this.mouseScale.x);
+        var y = Math.floor(event.offsetY / this.mouseScale.y);
         var found = false;
         for (var _i = 0, _a = this.buttons; _i < _a.length; _i++) {
             var button = _a[_i];
@@ -857,18 +864,14 @@ var CbmishConsole = /** @class */ (function () {
         event.preventDefault();
     };
     CbmishConsole.prototype.onmousemovecanvas = function (event) {
-        var x = Math.floor(event.offsetX / 8);
-        var y = Math.floor(event.offsetY / 8);
-        //console.log(`mousemove ${x},${y}`)
+        var x = Math.floor(event.offsetX / this.mouseScale.x);
+        var y = Math.floor(event.offsetY / this.mouseScale.y);
         for (var _i = 0, _a = this.buttons; _i < _a.length; _i++) {
             var button = _a[_i];
             button.checkMove(x, y);
         }
     };
     CbmishConsole.prototype.onmouseleavecanvas = function (event) {
-        var x = Math.floor(event.offsetX / 8);
-        var y = Math.floor(event.offsetY / 8);
-        //console.log(`mouseleave ${x},${y}`)
         for (var _i = 0, _a = this.buttons; _i < _a.length; _i++) {
             var button = _a[_i];
             button.checkLeave();
@@ -1225,7 +1228,7 @@ var CbmishConsole = /** @class */ (function () {
             + 'The purpose is to be able to render\r'
             + 'various web content with this look &\r'
             + 'feel to retain the retro vibe, yet also\r'
-            + 'enable modern programming languages like'
+            + 'enable modern programming languages like' + this.chr$(157) + '\r'
             + 'TypeScript.\r'
             + '\r'
             + 'Open source:\r');
@@ -1508,6 +1511,18 @@ var CbmishConsole = /** @class */ (function () {
         ctx.putImageData(imgData, 0, 0, 0, 0, canvasWidth, canvasHeight);
         if (collisionSprites.length + collisionBackground.length != 0 && this.onSpriteCollision != null)
             this.onSpriteCollision(collisionSprites.sort(), collisionBackground.sort());
+    };
+    CbmishConsole.prototype.getCols = function () {
+        return this.cols;
+    };
+    CbmishConsole.prototype.getRows = function () {
+        return this.rows;
+    };
+    CbmishConsole.prototype.getWidth = function () {
+        return this.cols * 8;
+    };
+    CbmishConsole.prototype.getHeight = function () {
+        return this.rows * 8;
     };
     return CbmishConsole;
 }());

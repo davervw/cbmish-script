@@ -26,7 +26,7 @@ var mainMenu = function () {
         setTimeout(function () {
             cbm.removeButtons();
             cbm.init();
-            addleave();
+            addexit();
             cbm.locate(0, 7);
             cbm.colorPicker(false);
         }, 250);
@@ -37,7 +37,7 @@ var mainMenu = function () {
     b7.onclick = function () {
         setTimeout(function () {
             cbm.removeButtons();
-            addleave();
+            addexit();
             dissolve();
         }, 250);
     };
@@ -48,7 +48,7 @@ var mainMenu = function () {
         setTimeout(function () {
             cbm.removeButtons();
             cbm.init();
-            addleave();
+            addexit();
             cbm.petsciiChr$Chart();
         }, 250);
     };
@@ -59,7 +59,7 @@ var mainMenu = function () {
         setTimeout(function () {
             cbm.removeButtons();
             cbm.init();
-            addleave();
+            addexit();
             cbm.petsciiPokesChart();
         }, 250);
     };
@@ -70,9 +70,9 @@ var mainMenu = function () {
         setTimeout(function () {
             cbm.removeButtons();
             cbm.init();
-            addleave();
+            addexit();
             cbm.locate(0, 6);
-            cbm.maze(19);
+            cbm.maze(cbm.getRows() - 6);
         }, 250);
     };
     cbm.locate(b4.right + 2, y);
@@ -81,7 +81,7 @@ var mainMenu = function () {
     b8.onclick = function () {
         setTimeout(function () {
             cbm.removeButtons();
-            addleave();
+            addexit();
             loresPlotDemo();
         }, 250);
     };
@@ -92,7 +92,7 @@ var mainMenu = function () {
         setTimeout(function () {
             cbm.removeButtons();
             cbm.fg = 1;
-            addleave();
+            addexit();
             cbm.keyboardChart();
             cbm.redrawButtons();
         }, 250);
@@ -103,7 +103,7 @@ var mainMenu = function () {
     b9.onclick = function () {
         setTimeout(function () {
             cbm.removeButtons();
-            addleave();
+            addexit();
             loresSineWave();
         }, 250);
     };
@@ -121,7 +121,7 @@ var mainMenu = function () {
     b11.onclick = function () {
         setTimeout(function () {
             cbm.removeButtons();
-            addleave();
+            addexit();
             dragonDemo();
         }, 250);
     };
@@ -133,7 +133,7 @@ var mainMenu = function () {
             cbm.removeButtons();
             cbm.fg = 1;
             cbm.aboutCbmish();
-            addleave();
+            addexit();
         }, 250);
     };
     cbm.locate(b6.right + 2, y);
@@ -144,17 +144,17 @@ var mainMenu = function () {
             cbm.removeButtons();
             cbm.fg = 1;
             dots();
-            addleave();
+            addexit();
         }, 250);
     };
     cbm.locate(0, 7);
     cbm.foreground(14);
     cbm.blinkCursor();
 };
-var addleave = function () {
+var addexit = function () {
     var saveColor = cbm.fg;
     cbm.foreground(1);
-    var saveRowCol = cbm.locate(37, 0);
+    var saveRowCol = cbm.locate(cbm.getCols() - 3, 0);
     var leave = cbm.addButton("X");
     leave.onclick = function () {
         var _cbm = cbm;
@@ -189,7 +189,7 @@ var dissolve = function () {
             var offset = a[i++ % 4000];
             var y = Math.floor(offset / 80);
             var x = offset % 80;
-            if (y < 6 && x >= 74)
+            if (y < 6 && x >= cbm.getCols() * 2 - 6)
                 continue;
             if (i <= 4000) {
                 var fg = Math.floor(y / 12) * 4 + Math.floor(x / 20);
@@ -302,9 +302,14 @@ var dragonDemo = function () {
     cbm.background(13);
     cbm.border(3);
     cbm.clear();
-    for (var i = 0; i < 1000; ++i) {
-        cbm.poke(13.5 * 4096 + i, dragonColor[i]);
-        cbm.poke(1024 + i, dragonChars[i]);
+    var cols = cbm.getCols();
+    for (var y = 0; y < 25; ++y) {
+        for (var x = 0; x < 40; ++x) {
+            var src = x + y * 40;
+            var dest = x + y * cols;
+            cbm.poke(13.5 * 4096 + dest, dragonColor[src]);
+            cbm.poke(1024 + dest, dragonChars[src]);
+        }
     }
     cbm.findButton('X').color = 0;
     cbm.redrawButtons();
@@ -419,8 +424,10 @@ var dotsForegroundText = function () {
     else {
         cbm.foreground(15);
         cbm.out(cbm.chr$(18));
-        for (var y = 8; y < 16; ++y) {
-            cbm.locate(20, y);
+        var y0 = Math.floor(cbm.getRows() / 3);
+        var y1 = y0 * 2;
+        for (var y = y0; y < y1; ++y) {
+            cbm.locate(Math.floor(cbm.getCols() / 2), y);
             cbm.out("".concat(cbm.chr$(18), " "));
         }
         cbm.out(cbm.chr$(146));
@@ -436,6 +443,7 @@ var dotsMoveLoop = function () {
 };
 var dotsMove = function () {
     var origin = { x: 24, y: 50 };
+    var screen = { width: cbm.getWidth(), height: cbm.getHeight() };
     for (var i = 0; i < cbm.sprites.length; ++i) {
         var sprite = cbm.sprites[i];
         var oldPosition = { x: sprite._x, y: sprite._y };
@@ -443,11 +451,11 @@ var dotsMove = function () {
         var x = sprite._x + dotsVectors[i].xd;
         var y = sprite._y + dotsVectors[i].yd;
         // check off screen
-        if (x < origin.x || x >= origin.x + 320 - 24) {
+        if (x < origin.x || x >= origin.x + screen.width - 24 * ((sprite._doubleX) ? 2 : 1)) {
             dotsVectors[i].xd = -dotsVectors[i].xd;
             x = sprite._x + dotsVectors[i].xd;
         }
-        if (y < origin.y || y >= origin.y + 200 - 21) {
+        if (y < origin.y || y >= origin.y + screen.height - 21 * ((sprite._doubleY) ? 2 : 1)) {
             dotsVectors[i].yd = -dotsVectors[i].yd;
             y = sprite._y + dotsVectors[i].yd;
         }
@@ -495,6 +503,8 @@ var dotsCheckResetColors = function () {
 };
 var dotsCreateSprites = function () {
     var origin = { x: 24, y: 50 };
+    var screen = { width: cbm.getWidth(), height: cbm.getHeight() };
+    var doubleSize = { x: false, y: false };
     cbm.hideSprites();
     var circle = dotSpriteImage();
     var color = 0;
@@ -506,14 +516,14 @@ var dotsCreateSprites = function () {
             ++color;
         sprite.color(color);
         color = (color + 1) & 15;
-        sprite.size(false, false);
+        sprite.size(doubleSize.x, doubleSize.y);
         cbm.onSpriteCollision = function (_1, _2) {
-            var x = origin.x + Math.random() * (320 - 24);
-            var y = origin.y + Math.random() * (200 - 21);
+            var x = origin.x + Math.random() * (screen.width - 24);
+            var y = origin.y + Math.random() * (screen.height - 21);
             sprite.move(x, y);
         };
-        var x = origin.x + Math.random() * (320 - 24);
-        var y = origin.y + Math.random() * (200 - 21);
+        var x = origin.x + Math.random() * (screen.width - 24);
+        var y = origin.y + Math.random() * (screen.height - 21);
         sprite.move(x, y);
         do {
             dotsVectors[i] = {
