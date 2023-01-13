@@ -2,9 +2,10 @@
       "compilerOptions": {
             "module": "es6",
             "lib": [
-                  "es2017",
+                  "es2020",
                   "dom"
             ],
+            "target": "ES2017",
             "outDir": "docs",
             "sourceMap": true,
       }
