@@ -96,7 +96,7 @@ class CbmishConsole {
         { 'key': '=', 'code': 166 },
     ];
 
-    public CbmishConsole(cols : number = 40, rows : number = 25) {
+    public CbmishConsole(cols : number = 80, rows : number = 26) {
         if (cols != null)
             this.cols = Math.floor(cols);
         if (rows != null)
