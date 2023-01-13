@@ -96,44 +96,56 @@ class CbmishConsole {
         { 'key': '=', 'code': 166 },
     ];
 
-    public CbmishConsole(cols : number = 40, rows : number = 25) {
-        if (cols != null)
-            this.cols = Math.floor(cols);
-        if (rows != null)
-            this.rows = Math.floor(rows);
+    public CbmishConsole(size = {cols :  40, rows :  25}) {
+
+        this.resize(size);
+
+        this.init();        
+        this.foreground(1);
+        
+        window.addEventListener('keypress', (event: KeyboardEvent) => { this.keypress(event); });
+        window.addEventListener('keydown', (event: KeyboardEvent) => { if (this.keydown(event.key, event.shiftKey, event.ctrlKey, event.altKey)) event.preventDefault(); });
+        window.addEventListener('keyup', (event: KeyboardEvent) => { this.keyup(event.key, event.shiftKey, event.ctrlKey, event.altKey); });
+        
+        this.checkStartupButton();
+        this.checkFullScreenThenScale();
+        
+        for (let i=0; i<8; ++i)
+            this.sprites.push(this.spriteFactory(i));
+    }
+
+    public resize(size = {cols :  40, rows :  25}) {
+        this.locate(0, 0);
+
+        this.cols = Math.floor(size.cols);
+        this.rows = Math.floor(size.rows);
+
         const width = 8 * Math.floor(this.cols);
         const height = 8 * Math.floor(this.rows);
         const consoleElement = document.getElementsByTagName('console')[0];
         consoleElement.innerHTML = `<canvas class="border"></canvas><canvas class="background"></canvas><canvas class="foreground" width="${width}" height="${height}"></canvas><canvas class="sprites" width="${width}" height="${height}"></canvas>`;
         const foregroundCanvas = consoleElement.getElementsByClassName("foreground")[0] as HTMLCanvasElement; 
-        const topCanvas = consoleElement.getElementsByClassName("sprites")[0] as HTMLCanvasElement;
         const foregroundSelector : any = document.querySelector(".foreground");
-        this.mouseScale.x = 8 * foregroundSelector.offsetWidth / foregroundCanvas.width;
-        this.mouseScale.y = 8 * foregroundSelector.offsetHeight / foregroundCanvas.height;
+        this.mouseScale.x = 8 * foregroundSelector.offsetWidth / width;
+        this.mouseScale.y = 8 * foregroundSelector.offsetHeight / height;
         this.ctx = foregroundCanvas.getContext("2d");
-        this.imgData = this.ctx.getImageData(0, 0, this.cols*8, this.rows*8);
+        this.imgData = this.ctx.getImageData(0, 0, width, height);
         this.bitmap = this.imgData.data;
-        this.init();        
-        window.addEventListener('keypress', (event: KeyboardEvent) => { this.keypress(event); });
-        window.addEventListener('keydown', (event: KeyboardEvent) => { if (this.keydown(event.key, event.shiftKey, event.ctrlKey, event.altKey)) event.preventDefault(); });
-        window.addEventListener('keyup', (event: KeyboardEvent) => { this.keyup(event.key, event.shiftKey, event.ctrlKey, event.altKey); });
+
+        const topCanvas = consoleElement.getElementsByClassName("sprites")[0] as HTMLCanvasElement;
         topCanvas.addEventListener('click', (event: MouseEvent) => this.onclickcanvas(event), false);
         topCanvas.addEventListener('mousemove', (event: MouseEvent) => this.onmousemovecanvas(event), false);
         topCanvas.addEventListener('mouseleave', (event: MouseEvent) => this.onmouseleavecanvas(event), false);
-        this.checkStartupButton();
-        this.checkFullScreenThenScale();
-        for (let i=0; i<8; ++i)
-            this.sprites.push(this.spriteFactory(i));
     }
 
-    public init() {
+    public init(colors = {border: 14, background: 6, foreground: 14}) {
         this.hideCursor();
         this.reverse = false;
         this.lowercase = true;
         this.underlined = false;
-        this.border(14);
-        this.background(6);
-        this.foreground(14);
+        this.border(colors.border);
+        this.background(colors.background);
+        this.foreground(colors.foreground);
 	    this.clear();
         this.out('\r    **** HTML/CSS/TYPESCRIPT ****\r');
         this.out('   ');
@@ -144,7 +156,6 @@ class CbmishConsole {
         this.out(' 1GB RAM SYSTEM  1073741824 BYTES FREE\r\r');
         this.out('READY.\r');
         this.blinkCursor();
-        this.foreground(1);
     }
 
     public out(obj: any) {

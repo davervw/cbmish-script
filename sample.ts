@@ -52,6 +52,19 @@ const mainMenu = function() {
             }, 250);
     }
 
+    cbm.locate(b2.left-10, y);
+    cbm.fg = 3;
+    const b13 = cbm.addButton("22x23 ");
+    b13.onclick = () => {
+        setTimeout(
+            () => {
+                cbm.removeButtons();
+                cbm.resize({ cols: 22, rows: 23 })
+                addexit();
+                screenVic();
+            }, 250);
+    }
+
     cbm.locate(b2.right+2, y);
     cbm.fg = 3;
     const b3 = cbm.addButton("Petscii  ");
@@ -79,6 +92,19 @@ const mainMenu = function() {
             }, 250);
     }
 
+    cbm.locate(b4.left-10, y);
+    cbm.fg = 0;
+    const b14 = cbm.addButton("80x25 ");
+    b14.onclick = () => {
+        setTimeout(
+            () => {
+                cbm.removeButtons();
+                cbm.resize({cols: 80, rows: 25})
+                addexit();
+                screenVdc();
+            }, 250);
+    }
+
     cbm.locate(b4.right+2, y);
     cbm.fg = 12;
     const b8 = cbm.addButton("Low res  ");
@@ -102,6 +128,19 @@ const mainMenu = function() {
                 addexit();
                 cbm.keyboardChart();
                 cbm.redrawButtons();
+            }, 250);
+    }
+
+    cbm.locate(b5.left-10, y);
+    cbm.fg = 5;
+    const b15 = cbm.addButton("80x25 ");
+    b15.onclick = () => {
+        setTimeout(
+            () => {
+                cbm.removeButtons();
+                cbm.resize({cols: 80, rows: 25})
+                addexit();
+                screenPet();
             }, 250);
     }
 
@@ -139,6 +178,19 @@ const mainMenu = function() {
             }, 250);
     } 
 
+    cbm.locate(b11.left-10, y);
+    cbm.fg = 1;
+    const b16 = cbm.addButton("80x50 ");
+    b16.onclick = () => {
+        setTimeout(
+            () => {
+                cbm.removeButtons();
+                cbm.resize({cols: 80, rows: 50})
+                addexit();
+                screenBig();
+            }, 250);
+    }
+
     cbm.locate(x, y+=3);
     cbm.fg = 15;
     const b6 = cbm.addButton("About   ");
@@ -149,6 +201,19 @@ const mainMenu = function() {
                 cbm.fg = 1;
                 cbm.aboutCbmish();
                 addexit();
+            }, 250);
+    }
+
+    cbm.locate(b11.left-10, y);
+    cbm.fg = 14;
+    const b17 = cbm.addButton("40x25 ");
+    b17.onclick = () => {
+        setTimeout(
+            () => {
+                cbm.removeButtons();
+                cbm.resize({cols: 40, rows: 25})
+                addexit();
+                screenC64();
             }, 250);
     }
 
@@ -177,7 +242,9 @@ const addexit = function () {
     const leave = cbm.addButton("X");
     leave.onclick = () => { 
         let _cbm:any = cbm; 
-        _cbm.escapePressed=true; 
+        _cbm.escapePressed=true;
+        if (cbm.getCols() < 40)
+            cbm.resize();
         onleave(); 
     }
     cbm.fg = saveColor;
@@ -642,6 +709,37 @@ const toggleBlinkingCursor = function() {
     const blink = !cbm.hideCursor();
     if (blink)
         cbm.blinkCursor();
+}
+
+const screenVic = () => {
+    cbm.background(1)
+    cbm.foreground(6);
+    cbm.border(3);
+    cbm.clear();
+    cbm.findButton("X").color = 0;
+    cbm.redrawButtons();
+}
+
+const screenVdc = () => {
+    cbm.init({background: 0, border: 0, foreground: 3});
+}
+
+const screenPet = () => {
+    cbm.init({background: 0, border: 0, foreground: 5});
+}
+
+const screenBig = () => {
+    cbm.init({background: 6, border: 14, foreground: 15});
+    cbm.foreground(1);
+    cbm.hideCursor();
+    cbm.blinkCursor();
+}
+
+const screenC64 = () => {
+    cbm.init();
+    cbm.foreground(1);
+    cbm.hideCursor();
+    cbm.blinkCursor();
 }
 
 mainMenu();
