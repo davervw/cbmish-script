@@ -243,8 +243,10 @@ const addexit = function () {
     leave.onclick = () => { 
         let _cbm:any = cbm; 
         _cbm.escapePressed=true;
-        if (cbm.getCols() < 40)
+        if (cbm.getCols() < 40) {
             cbm.resize();
+            addDoubleClickToggleCursorHandler();
+        }
         onleave(); 
     }
     cbm.fg = saveColor;
@@ -701,9 +703,11 @@ const spriteXorWithNumber = function(image: number[], n: number): number[] {
     return image;
 }
 
-const consoleElement = document.getElementsByTagName('console')[0];
-const topCanvas = consoleElement.getElementsByClassName("sprites")[0] as HTMLCanvasElement;
-topCanvas.addEventListener('dblclick', (event: MouseEvent) => toggleBlinkingCursor(), false);
+const addDoubleClickToggleCursorHandler = () => {
+    const consoleElement = document.getElementsByTagName('console')[0];
+    const topCanvas = consoleElement.getElementsByClassName("sprites")[0] as HTMLCanvasElement;
+    topCanvas.addEventListener('dblclick', (event: MouseEvent) => toggleBlinkingCursor(), false);
+}
 
 const toggleBlinkingCursor = function() {
     const blink = !cbm.hideCursor();
@@ -718,14 +722,17 @@ const screenVic = () => {
     cbm.clear();
     cbm.findButton("X").color = 0;
     cbm.redrawButtons();
+    addDoubleClickToggleCursorHandler();
 }
 
 const screenVdc = () => {
     cbm.init({background: 0, border: 0, foreground: 3});
+    addDoubleClickToggleCursorHandler();
 }
 
 const screenPet = () => {
     cbm.init({background: 0, border: 0, foreground: 5});
+    addDoubleClickToggleCursorHandler();
 }
 
 const screenBig = () => {
@@ -733,6 +740,7 @@ const screenBig = () => {
     cbm.foreground(1);
     cbm.hideCursor();
     cbm.blinkCursor();
+    addDoubleClickToggleCursorHandler();
 }
 
 const screenC64 = () => {
@@ -740,6 +748,8 @@ const screenC64 = () => {
     cbm.foreground(1);
     cbm.hideCursor();
     cbm.blinkCursor();
+    addDoubleClickToggleCursorHandler();
 }
 
 mainMenu();
+addDoubleClickToggleCursorHandler();

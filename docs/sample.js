@@ -205,8 +205,10 @@ const addexit = function () {
     leave.onclick = () => {
         let _cbm = cbm;
         _cbm.escapePressed = true;
-        if (cbm.getCols() < 40)
+        if (cbm.getCols() < 40) {
             cbm.resize();
+            addDoubleClickToggleCursorHandler();
+        }
         onleave();
     };
     cbm.fg = saveColor;
@@ -625,9 +627,11 @@ const spriteXorWithNumber = function (image, n) {
         throw `expected one or two digit number, not ${n}`;
     return image;
 };
-const consoleElement = document.getElementsByTagName('console')[0];
-const topCanvas = consoleElement.getElementsByClassName("sprites")[0];
-topCanvas.addEventListener('dblclick', (event) => toggleBlinkingCursor(), false);
+const addDoubleClickToggleCursorHandler = () => {
+    const consoleElement = document.getElementsByTagName('console')[0];
+    const topCanvas = consoleElement.getElementsByClassName("sprites")[0];
+    topCanvas.addEventListener('dblclick', (event) => toggleBlinkingCursor(), false);
+};
 const toggleBlinkingCursor = function () {
     const blink = !cbm.hideCursor();
     if (blink)
@@ -640,24 +644,30 @@ const screenVic = () => {
     cbm.clear();
     cbm.findButton("X").color = 0;
     cbm.redrawButtons();
+    addDoubleClickToggleCursorHandler();
 };
 const screenVdc = () => {
     cbm.init({ background: 0, border: 0, foreground: 3 });
+    addDoubleClickToggleCursorHandler();
 };
 const screenPet = () => {
     cbm.init({ background: 0, border: 0, foreground: 5 });
+    addDoubleClickToggleCursorHandler();
 };
 const screenBig = () => {
     cbm.init({ background: 6, border: 14, foreground: 15 });
     cbm.foreground(1);
     cbm.hideCursor();
     cbm.blinkCursor();
+    addDoubleClickToggleCursorHandler();
 };
 const screenC64 = () => {
     cbm.init();
     cbm.foreground(1);
     cbm.hideCursor();
     cbm.blinkCursor();
+    addDoubleClickToggleCursorHandler();
 };
 mainMenu();
+addDoubleClickToggleCursorHandler();
 //# sourceMappingURL=sample.js.map
