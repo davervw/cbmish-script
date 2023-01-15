@@ -716,10 +716,17 @@ const toggleBlinkingCursor = function() {
 }
 
 const screenVic = () => {
+    cbm.font = vic20_char_rom;
     cbm.background(1)
     cbm.foreground(6);
     cbm.border(3);
     cbm.clear();
+    cbm.out("*** TYPESCRIPT ***\r");
+    cbm.newLine();
+    cbm.addLink("CBMISH", 'https://github.com/davervw/cbmish-script');
+    cbm.out(" 1GB FREE\r");
+    cbm.newLine();
+    cbm.out("READY.\r");
     cbm.findButton("X").color = 0;
     cbm.redrawButtons();
     addDoubleClickToggleCursorHandler();
@@ -744,6 +751,7 @@ const screenBig = () => {
 }
 
 const screenC64 = () => {
+    cbm.font = c64_char_rom;
     cbm.init();
     cbm.foreground(1);
     cbm.hideCursor();
