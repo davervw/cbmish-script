@@ -258,45 +258,52 @@ const dissolve = function () {
 };
 const loresPlotDemo = function () {
     cbm.clear();
-    cbm.locate(15, 23);
-    cbm.addLink('link: blog entry', 'https://techwithdave.davevw.com/2021/04/low-resolution-graphics-for-commodore.html');
+    const link_text = 'link: blog entry';
+    const link_url = 'https://techwithdave.davevw.com/2021/04/low-resolution-graphics-for-commodore.html';
+    cbm.locate((cbm.getCols() - link_text.length) / 2, cbm.getRows() - 2);
+    cbm.addLink(link_text, link_url);
     let n = Math.ceil(4 * Math.PI / 0.03) + 1;
     let i = 0;
     cbm.repeat(() => {
         let p = Math.cos(i / 2);
-        let x = 39 * p * Math.cos(i) + 40;
-        let y = 24 * p * Math.sin(i) + 25;
+        let x = (cbm.getCols() - 1) * p * Math.cos(i) + cbm.getCols();
+        let y = (cbm.getRows() - 1) * p * Math.sin(i) + cbm.getRows();
         cbm.loresPlot(x, y);
         i += 0.03;
     }, n, 5);
 };
 const loresSineWave = function () {
+    cbm.hideCursor();
     cbm.clear();
     cbm.newLine();
     cbm.foreground(7);
     cbm.largeText('HELLO');
     cbm.largeText('CBM!');
-    cbm.foreground(14);
-    cbm.locate(22, 22);
-    cbm.addLink('link: tweet', 'https://twitter.com/DaveRVW/status/1547040376367636480');
     cbm.foreground(0);
-    for (let x = 0; x < 80; ++x)
-        cbm.loresPlot(x, 25); // centered horizontal line
-    for (let y = 0; y < 50; ++y)
-        cbm.loresPlot(40, y); // centered vertical line
+    const textDimensions = { width: cbm.getCols(), height: cbm.getRows() };
+    const loresDimensions = { width: textDimensions.width * 2, height: textDimensions.height * 2 };
+    for (let x = 0; x < loresDimensions.width; ++x)
+        cbm.loresPlot(x, loresDimensions.height / 2); // centered horizontal line
+    for (let y = 0; y < loresDimensions.height; ++y)
+        cbm.loresPlot(loresDimensions.width / 2, y); // centered vertical line
     cbm.foreground(1);
     let x = 0;
     cbm.repeat(() => {
-        let y = 25 * Math.sin(x / 10) + 25;
+        let y = loresDimensions.height / 2 * Math.sin(x / 10) + loresDimensions.height / 2;
         cbm.loresPlot(x, y);
-        if (++x == 80) {
-            cbm.locate(0, 19);
+        if (++x == loresDimensions.width) {
             cbm.foreground(14);
+            const link_text = 'link: tweet';
+            const link_url = 'https://twitter.com/DaveRVW/status/1547040376367636480';
+            cbm.locate(cbm.getCols() * 0.55, cbm.getRows() - 3);
+            cbm.addLink(link_text, link_url);
+            cbm.locate(0, 19);
             cbm.out('READY');
             cbm.newLine();
+            cbm.blinkCursor();
         }
         ;
-    }, 80);
+    }, loresDimensions.width);
 };
 const dragonDemo = function () {
     const dragonChars = [
