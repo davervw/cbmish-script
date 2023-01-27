@@ -147,8 +147,8 @@ class CbmishConsole {
             return;
         let wasBlinking = this.hideCursor();
         const s = obj.toString();
-        for (let i = 0; i < s.length; ++i)
-            this.outChar(s.charAt(i));
+        for (let c of s)
+            this.outChar(c);
         if (wasBlinking)
             this.blinkCursor();
     }
@@ -992,31 +992,27 @@ class CbmishConsole {
     }
     removeButton(button) {
         let i = this.buttons.findIndex(x => x === button);
-        if (i >= 0) {
-            // remove from screen
-            for (let y = button.top; y < button.bottom; ++y) {
-                for (let x = button.left; x < button.right; ++x) {
-                    const offset = x + y * this.cols;
-                    this.pokeScreen(1024 + offset, 32);
-                }
-            }
-            // remove from collection
-            this.buttons.splice(i, 1);
-        }
+        if (i < 0)
+            return;
+        this.eraseButton(button);
+        // remove from collection
+        this.buttons.splice(i, 1);
     }
     removeButtons() {
         while (this.buttons.length > 0)
             this.removeButton(this.buttons[0]);
     }
-    eraseButtons() {
-        for (let button of this.buttons) {
-            for (let y = button.top; y < button.bottom; ++y) {
-                for (let x = button.left; x < button.right; ++x) {
-                    const offset = x + y * this.cols;
-                    this.pokeScreen(1024 + offset, 32);
-                }
+    eraseButton(button) {
+        for (let y = button.top; y < button.bottom; ++y) {
+            for (let x = button.left; x < button.right; ++x) {
+                const offset = x + y * this.cols;
+                this.pokeScreen(1024 + offset, 32);
             }
         }
+    }
+    eraseButtons() {
+        for (let button of this.buttons)
+            this.eraseButton(button);
     }
     redrawButtons() {
         if (this.buttons.length == 0)
@@ -1426,6 +1422,7 @@ class CbmishConsole {
         let collisionBackground = [];
         const originX = 25;
         const originY = 51;
+        // draw sprites in reverse order so lowest has priority
         for (let i = this.sprites.length - 1; i >= 0; --i) {
             const sprite = this.sprites[i];
             const spriteWidth = 24 * (sprite._doubleX ? 2 : 1);
