@@ -95,9 +95,9 @@ class CbmishConsole {
         this.init();
         this.foreground(1);
         window.addEventListener('keypress', (event) => { this.keypress(event); });
-        window.addEventListener('keydown', (event) => { if (this.keydown(event.key, event.shiftKey, event.ctrlKey, event.altKey))
+        window.addEventListener('keydown', (event) => { if (this.keydown(event))
             event.preventDefault(); });
-        window.addEventListener('keyup', (event) => { this.keyup(event.key, event.shiftKey, event.ctrlKey, event.altKey); });
+        window.addEventListener('keyup', (event) => { this.keyup(event); });
         this.checkStartupButton();
         this.checkFullScreenThenScale();
         for (let i = 0; i < 8; ++i)
@@ -594,8 +594,12 @@ class CbmishConsole {
             key = (_b = this.chr$(0x7D)) !== null && _b !== void 0 ? _b : '';
         this.out(key);
     }
-    keydown(key, shiftKey, ctrlKey, altKey) {
+    keydown(event) {
         var _a;
+        const key = event.key;
+        const shiftKey = event.shiftKey;
+        const ctrlKey = event.ctrlKey;
+        const altKey = event.altKey;
         if (key == 'Home' && !altKey) {
             if (shiftKey && !ctrlKey)
                 this.clear();
@@ -713,7 +717,11 @@ class CbmishConsole {
         }
         return false;
     }
-    keyup(key, shiftKey, ctrlKey, altKey) {
+    keyup(event) {
+        const key = event.key;
+        const shiftKey = event.shiftKey;
+        const ctrlKey = event.ctrlKey;
+        const altKey = event.altKey;
         if (key == 'Escape')
             this.escapePressed = false;
         else if (key == 'Tab')

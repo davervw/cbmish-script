@@ -98,15 +98,14 @@ class CbmishConsole {
     ];
 
     public CbmishConsole(size = {cols :  40, rows :  25}) {
-
         this.resize(size);
 
         this.init();        
         this.foreground(1);
         
         window.addEventListener('keypress', (event: KeyboardEvent) => { this.keypress(event); });
-        window.addEventListener('keydown', (event: KeyboardEvent) => { if (this.keydown(event.key, event.shiftKey, event.ctrlKey, event.altKey)) event.preventDefault(); });
-        window.addEventListener('keyup', (event: KeyboardEvent) => { this.keyup(event.key, event.shiftKey, event.ctrlKey, event.altKey); });
+        window.addEventListener('keydown', (event: KeyboardEvent) => { if (this.keydown(event)) event.preventDefault(); });
+        window.addEventListener('keyup', (event: KeyboardEvent) => { this.keyup(event); });
         
         this.checkStartupButton();
         this.checkFullScreenThenScale();
@@ -686,7 +685,11 @@ class CbmishConsole {
         this.out(key);
     }
 
-    private keydown(key: string, shiftKey: boolean, ctrlKey: boolean, altKey: boolean): boolean {
+    private keydown(event: KeyboardEvent): boolean {
+        const key = event.key;
+        const shiftKey = event.shiftKey;
+        const ctrlKey = event.ctrlKey;
+        const altKey = event.altKey;
         if (key == 'Home' && !altKey) {
             if (shiftKey && !ctrlKey)
                 this.clear()
@@ -787,7 +790,11 @@ class CbmishConsole {
         return false;
     }
 
-    private keyup(key: string, shiftKey: boolean, ctrlKey: boolean, altKey: boolean) {
+    private keyup(event: KeyboardEvent) {
+        const key = event.key;
+        const shiftKey = event.shiftKey;
+        const ctrlKey = event.ctrlKey;
+        const altKey = event.altKey;
         if (key == 'Escape')
             this.escapePressed = false;
         else if (key == 'Tab')
