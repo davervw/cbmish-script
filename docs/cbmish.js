@@ -86,7 +86,6 @@ class CbmishConsole {
         ];
         this.loresChars = [32, 126, 124, 226, 123, 97, 255, 236,
             108, 127, 225, 251, 98, 252, 254, 160];
-        this.checkStartupIntervalId = -1;
         this.onSpriteCollision = (collisionSprites, collisionBackground) => {
             //console.log(`onSpriteCollision(${JSON.stringify(collisionSprites)}, ${JSON.stringify(collisionBackground)})`);
         };
@@ -1240,7 +1239,7 @@ class CbmishConsole {
         if (this.fullScreen) {
             let element = document.getElementsByTagName('html')[0];
             element.requestFullscreen()
-                .then(this.rescaleId = setInterval(() => this.rescaleFullScreen(), 200)) // TODO: handle resize event instead of 200ms delay
+                .then(setTimeout(() => this.rescaleFullScreen(), 200)) // TODO: handle resize event instead of 200ms delay
                 .catch((err) => this.fullScreenError = true);
         }
         else {
@@ -1256,8 +1255,6 @@ class CbmishConsole {
         element.style = `transform: scale(${this.scale});`;
     }
     rescaleFullScreen() {
-        clearInterval(this.rescaleId);
-        this.rescaleId = undefined;
         let scaleX = window.screen.availWidth / 380;
         let scaleY = window.screen.availHeight / 250;
         let scale = Math.min(scaleX, scaleY);
@@ -1308,9 +1305,7 @@ class CbmishConsole {
         let params = new URLSearchParams(window.location.search);
         let buttonName = params.get('button');
         if (buttonName)
-            this.checkStartupIntervalId = setInterval(() => {
-                clearInterval(this.checkStartupIntervalId);
-                this.checkStartupIntervalId = -1;
+            setTimeout(() => {
                 let button = this.findButton(buttonName, true);
                 if (button)
                     button.onclick();

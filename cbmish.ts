@@ -1369,14 +1369,12 @@ class CbmishConsole {
           +this.palette[color][3].toString(16).padStart(2, '0');
     }
 
-    private rescaleId : number;
-
     toggleFullScreen() {
         this.fullScreen = !this.fullScreen;
         if (this.fullScreen) {
             let element: any = document.getElementsByTagName('html')[0];
             element.requestFullscreen()
-                .then(this.rescaleId = setInterval( () => this.rescaleFullScreen(), 200)) // TODO: handle resize event instead of 200ms delay
+                .then(setTimeout( () => this.rescaleFullScreen(), 200)) // TODO: handle resize event instead of 200ms delay
                 .catch((err) => this.fullScreenError = true )
         } else {
             if (!this.fullScreenError)
@@ -1393,8 +1391,6 @@ class CbmishConsole {
     }
 
     rescaleFullScreen() {
-        clearInterval(this.rescaleId);
-        this.rescaleId = undefined;
         let scaleX = window.screen.availWidth / 380;
         let scaleY = window.screen.availHeight / 250;
         let scale = Math.min(scaleX, scaleY);
@@ -1448,14 +1444,11 @@ class CbmishConsole {
             this.blinkCursor();
     }
 
-    private checkStartupIntervalId = -1;
     private checkStartupButton() {
         let params = new URLSearchParams(window.location.search);
         let buttonName = params.get('button');
         if (buttonName)
-            this.checkStartupIntervalId = setInterval(() => {
-                clearInterval(this.checkStartupIntervalId);
-                this.checkStartupIntervalId = -1;
+            setTimeout(() => {
                 let button = this.findButton(buttonName, true);
                 if (button)
                     button.onclick();
