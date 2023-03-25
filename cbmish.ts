@@ -1570,7 +1570,6 @@ class CbmishConsole {
         const canvasWidth = Number.parseInt(canvas.getAttribute('width'));
         const canvasHeight = Number.parseInt(canvas.getAttribute('height'));
         const ctx = canvas.getContext("2d", { willReadFrequently: true });
-        const attrs = ctx.getContextAttributes();
         ctx.clearRect(0, 0, canvasWidth, canvasHeight);
         const imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
         const bitmap = imgData.data;
