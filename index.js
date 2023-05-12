@@ -1,10 +1,6 @@
-// Import stylesheets
-import './style.css';
-
 // example of accessing Bible text from JSON via JavaScript
 
-const lib =  require('./bible');
-const bible = lib.bible;
+import { bible } from "./bible.js"
 const books = getBooks();
 
 // MIT LICENSE
