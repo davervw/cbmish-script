@@ -1,7 +1,6 @@
 // example of accessing Bible text from JSON via JavaScript
 
-const lib =  require('./bible');
-const bible = lib.bible;
+import { bible } from "./bible"
 const books = getBooks();
 
 // MIT LICENSE
