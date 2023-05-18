@@ -197,6 +197,7 @@ const mainMenu = function () {
     cbm.locate(0, 7);
     cbm.foreground(14);
     cbm.blinkCursor();
+    addexitMainMenu();
 };
 const addexit = function () {
     const saveColor = cbm.fg;
@@ -220,6 +221,32 @@ const onleave = function () {
         cbm.removeButtons();
         cbm.hideSprites();
         mainMenu();
+        let _cbm = cbm;
+        _cbm.escapePressed = false;
+    }, 250);
+};
+const addexitMainMenu = function () {
+    const saveColor = cbm.fg;
+    cbm.foreground(1);
+    const saveRowCol = cbm.locate(cbm.getCols() - 3, 0);
+    const leave = cbm.addButton("X");
+    leave.onclick = () => {
+        let _cbm = cbm;
+        _cbm.escapePressed = true;
+        if (cbm.getCols() < 40) {
+            cbm.resize();
+            addDoubleClickToggleCursorHandler();
+        }
+        onleaveMainMenu();
+    };
+    cbm.fg = saveColor;
+    cbm.locate(saveRowCol[1], saveRowCol[0]);
+};
+const onleaveMainMenu = function () {
+    setTimeout(() => {
+        cbm.removeButtons();
+        cbm.hideSprites();
+        bibleUI();
         let _cbm = cbm;
         _cbm.escapePressed = false;
     }, 250);

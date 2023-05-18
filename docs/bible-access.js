@@ -49,16 +49,18 @@ const bibleUI = function () {
 const booksUI = function () {
     cbm.removeButtons();
     cbm.clear();
-    cbm.out('BIBLE');
+    cbm.underline(6);
+    cbm.foreground(3);
+    const about = cbm.addLink('BIBLE', '');
+    about.onclick = () => setTimeout(() => { aboutBible(); }, 250);
     cbm.newLine();
     cbm.newLine();
+    cbm.foreground(15);
     cbm.out('OLD TESTAMENT');
     cbm.newLine();
     const books = getBooks();
     const cols = cbm.getWidth() / 8;
     let col = 0;
-    cbm.foreground(15);
-    cbm.underline(6);
     books.forEach(book => {
         if (book.length + col >= cols) {
             cbm.newLine();
@@ -83,6 +85,10 @@ const booksUI = function () {
         if (col == cols)
             col = 0;
     });
+    cbm.locate(0, cbm.getHeight() / 8 - 1);
+    cbm.foreground(15);
+    cbm.reverse = true;
+    cbm.out("[Use mouse to navigate]");
 };
 const bookUI = function (book) {
     cbm.removeButtons();
@@ -230,5 +236,24 @@ const nextBook = function (book) {
     if (i == books.length - 1)
         return books[0];
     return books[i + 1];
+};
+const aboutBible = function () {
+    cbm.removeButtons();
+    cbm.clear();
+    cbm.underline(15);
+    const link1 = cbm.addLink("BIBLE", "https://github.com/davervw/cbmish-script/tree/bible");
+    cbm.out(" is built on ");
+    const link2 = cbm.addLink("cbmish-script", "https://github.com/davervw/cbmish-script");
+    cbm.out(" which   provides a modern Commodore-like look   and feel for the web programmed in and  with TypeScript.");
+    cbm.newLine();
+    let row = 0;
+    let col = 0;
+    [row, col] = cbm.locate(0, 0);
+    cbm.locate(col, row);
+    const button1 = cbm.addButton("Bible");
+    button1.onclick = () => setTimeout(() => { bibleUI(); }, 250);
+    cbm.locate(col + 7, row);
+    const button2 = cbm.addButton("Samples");
+    button2.onclick = () => setTimeout(() => { mainMenu(); }, 250);
 };
 //# sourceMappingURL=bible-access.js.map
