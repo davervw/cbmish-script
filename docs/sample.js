@@ -4,13 +4,9 @@
 // davevw.com
 var cbm = new CbmishConsole();
 cbm.CbmishConsole();
-//cbm.removeButtons();
-const verse = findVerse("GENESIS", "1", "1");
-cbm.out(`${verse.book} ${verse.chapter}:${verse.verse}`);
-cbm.newLine();
-cbm.out(verse.text);
-cbm.newLine();
+bibleUI();
 const mainMenu = function () {
+    cbm.removeButtons();
     cbm.init();
     cbm.hideCursor();
     const x = 15;

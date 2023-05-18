@@ -41,84 +41,194 @@ function findText(text) {
     text = text.toLowerCase();
     return bible.filter(x => x.text.toLowerCase().includes(text));
 }
-const diagDiv = document.getElementById('diag');
-// function refreshVerse() {
-//   const textDiv = document.getElementById('text');
-//   const book = books[document.getElementById('books').selectedIndex];
-//   const chapter = document.getElementById('chapter').selectedIndex+1;
-//   const verse = document.getElementById('verse').selectedIndex+1;
-//   const match = findVerse(book, chapter, verse);
-//   textDiv.innerHTML = `<p><b>${match.text}</b></p>`
-// }
-// function fillSelectBooks() {
-//   const selectBooks = document.getElementById('books');
-//   let booknum = 0
-//   selectBooks.innerHTML = "";
-//   books.map(book => {
-//     selectBooks.innerHTML += `<option value="${booknum}">${book}</option>`;
-//     booknum++;
-//   })
-// }
-// function fillChapters() {
-//   const selectChapter = document.getElementById('chapter');
-//   const book = books[document.getElementById('books').selectedIndex];
-//   selectChapter.innerHTML = "";
-//   bible.filter(x => x.book == book && x.verse == 1).map(x => {
-//     selectChapter.innerHTML += `<option value="${x.chapter}">${x.chapter}</option>`;
-//   })
-// }
-// function fillVerses() {
-//   const selectVerse = document.getElementById('verse');       
-//   const book = books[document.getElementById('books').selectedIndex];
-//   const chapter = document.getElementById('chapter').selectedIndex+1;
-//   selectVerse.innerHTML = "";
-//   bible.filter(x => x.book == book && x.chapter == chapter).map(x => {
-//     selectVerse.innerHTML += `<option value="${x.verse}">${x.verse}</option>`;
-//   })
-// }
 ////////////////////////////////////////////////////////////////////////
-// fillSelectBooks();
-// fillChapters();
-// fillVerses();
-// refreshVerse();
-// document.getElementById('books').onchange = function() {
-//   document.getElementById('chapter').selectedIndex = 0;
-//   document.getElementById('verse').selectedIndex = 0;
-//   fillChapters();
-//   fillVerses();
-//   refreshVerse();
-// }
-// document.getElementById('chapter').onchange = function() {
-//   document.getElementById('verse').selectedIndex = 0;
-//   fillVerses();
-//   refreshVerse();
-// }
-// document.getElementById('verse').onchange = function() {
-//   refreshVerse();
-// }
-// diagDiv.innerHTML += `<p>${bible.length} verses</p>`;
-// let bytes = 0;
-// bible.map(x => bytes += x.text.length+1); // add text and newline
-// diagDiv.innerHTML += `<p>${bytes} bytes text</p>`;
-// diagDiv.innerHTML += `<p>${countBooks()} books</p>`;
-// diagDiv.innerHTML += `<p>${countChapters("GENESIS")} chapters in Genesis</p>`;
-// diagDiv.innerHTML += `<p>${countVerses("GENESIS", 1)} verses in Genesis 1</p>`;
-// diagDiv.innerHTML += `<p>${countChapters("PSALMS")} chapters in Psalms</p>`;
-// diagDiv.innerHTML += `<p>${countVerses("PSALMS", 139)} verses in Psalms 139</p>`;
-// diagDiv.innerHTML += `<p>${countChapters("MATTHEW")} chapters in Matthew</p>`;
-// diagDiv.innerHTML += `<p>${countVerses("MATTHEW", 1)} verses in Matthew 1</p>`;
-// diagDiv.innerHTML += `<p>${countChapters("REVELATION")} chapters in Revelation</p>`;
-// diagDiv.innerHTML += `<p>${countVerses("REVELATION", 22)} verses in Relevation 22</p>`;
-// diagDiv.innerHTML += "<hr>"
-// const searchText = "great fish"
-// let count = 0;
-// let matches = findText(searchText)
-// diagDiv.innerHTML += `<p>${searchText} mentioned ${matches.length} times`
-// matches.map(x => {
-//   if (++count < 100)
-//   {
-//     diagDiv.innerHTML += `<p>${x.book} ${x.chapter}:${x.verse}`
-//     diagDiv.innerHTML += `<p>${x.text}</p>`
-//   }
-// });
+const bibleUI = function () {
+    cbm.hideCursor();
+    booksUI();
+};
+const booksUI = function () {
+    cbm.removeButtons();
+    cbm.clear();
+    cbm.out('BIBLE');
+    cbm.newLine();
+    cbm.newLine();
+    cbm.out('OLD TESTAMENT');
+    cbm.newLine();
+    const books = getBooks();
+    const cols = cbm.getWidth() / 8;
+    let col = 0;
+    cbm.foreground(15);
+    cbm.underline(6);
+    books.forEach(book => {
+        if (book.length + col >= cols) {
+            cbm.newLine();
+            col = 0;
+        }
+        if (book == "MATTHEW") {
+            cbm.foreground(1);
+            if (col > 0) {
+                cbm.newLine();
+                col = 0;
+            }
+            cbm.out('NEW TESTAMENT');
+            cbm.newLine();
+        }
+        const link = cbm.addLink(book, book);
+        link.onclick = () => setTimeout(() => { bookUI(book); }, 250);
+        col += book.length;
+        if (col < cols) {
+            cbm.out(' ');
+            ++col;
+        }
+        if (col == cols)
+            col = 0;
+    });
+};
+const bookUI = function (book) {
+    cbm.removeButtons();
+    cbm.clear();
+    cbm.out(book);
+    cbm.newLine();
+    cbm.newLine();
+    cbm.out("CHAPTERS");
+    cbm.newLine();
+    const cols = cbm.getWidth() / 8;
+    let col = 0;
+    let numChapters = countChapters(book);
+    for (let i = 1; i <= numChapters; ++i) {
+        const chapter = i.toString();
+        if (chapter.length + col >= cols) {
+            cbm.newLine();
+            col = 0;
+        }
+        const link = cbm.addLink(chapter, chapter);
+        link.onclick = () => setTimeout(() => { chapterUI(book, chapter); }, 250);
+        col += chapter.length;
+        if (col < cols) {
+            cbm.out(' ');
+            ++col;
+        }
+        if (col == cols)
+            col = 0;
+    }
+};
+const chapterUI = function (book, chapter) {
+    cbm.removeButtons();
+    cbm.clear();
+    cbm.out(`${book} ${chapter}`);
+    cbm.newLine();
+    cbm.newLine();
+    cbm.out("VERSES");
+    cbm.newLine();
+    const cols = cbm.getWidth() / 8;
+    let col = 0;
+    let numVerses = countVerses(book, chapter);
+    for (let i = 1; i <= numVerses; ++i) {
+        const verse = i.toString();
+        if (verse.length + col >= cols) {
+            cbm.newLine();
+            col = 0;
+        }
+        const link = cbm.addLink(verse, verse);
+        link.onclick = () => setTimeout(() => { verseUI(book, chapter, verse); }, 250);
+        col += verse.length;
+        if (col < cols) {
+            cbm.out(' ');
+            ++col;
+        }
+        if (col == cols)
+            col = 0;
+    }
+};
+const verseUI = function (book, chapter, verse) {
+    cbm.removeButtons();
+    cbm.clear();
+    const entry = findVerse(book, chapter, verse);
+    if (entry == null)
+        return entry;
+    {
+        const link = cbm.addLink('<', null);
+        link.onclick = () => setTimeout(() => { versePreviousUI(book, chapter, verse); }, 250);
+    }
+    cbm.out(' ');
+    {
+        const link = cbm.addLink('>', null);
+        link.onclick = () => setTimeout(() => { verseNextUI(book, chapter, verse); }, 250);
+    }
+    cbm.out(' ');
+    {
+        const link = cbm.addLink(entry.book, null);
+        link.onclick = () => setTimeout(() => {
+            booksUI();
+        }, 250);
+    }
+    cbm.out(' ');
+    {
+        const link = cbm.addLink(entry.chapter, null);
+        link.onclick = () => setTimeout(() => {
+            bookUI(entry.book);
+        }, 250);
+    }
+    cbm.out(':');
+    {
+        const link = cbm.addLink(entry.verse, null);
+        link.onclick = () => setTimeout(() => {
+            chapterUI(entry.book, entry.chapter);
+        }, 250);
+    }
+    cbm.newLine();
+    cbm.newLine();
+    const cols = cbm.getWidth() / 8;
+    let col = 0;
+    const text = entry.text.replace(/[\[\]#]/g, '');
+    text.split(' ').forEach(word => {
+        if (word.length > 0) {
+            if (word.length + col >= cols) {
+                cbm.newLine();
+                col = 0;
+            }
+            cbm.out(word);
+            col += word.length;
+            if (col < cols) {
+                cbm.out(' ');
+                ++col;
+            }
+            if (col == cols)
+                col = 0;
+        }
+    });
+    return entry;
+};
+const versePreviousUI = function (book, chapter, verse) {
+    chapter = (verse == '1') ? (Number(chapter) - 1).toString() : chapter;
+    if (chapter == '0') {
+        book = prevBook(book);
+        chapter = countChapters(book).toString();
+    }
+    verse = (verse == '1') ? countVerses(book, chapter).toString() : (Number(verse) - 1).toString();
+    verseUI(book, chapter, verse);
+};
+const verseNextUI = function (book, chapter, verse) {
+    let next = verseUI(book, chapter, (Number(verse) + 1).toString());
+    if (next == null)
+        next = verseUI(book, (Number(chapter) + 1).toString(), '1');
+    if (next == null) {
+        book = nextBook(book);
+        verseUI(book, '1', '1');
+    }
+};
+const prevBook = function (book) {
+    const books = getBooks();
+    const i = books.findIndex(x => x == book);
+    if (i == 0)
+        return books[books.length - 1];
+    return books[i - 1];
+};
+const nextBook = function (book) {
+    const books = getBooks();
+    const i = books.findIndex(x => x == book);
+    if (i == books.length - 1)
+        return books[0];
+    return books[i + 1];
+};
 //# sourceMappingURL=bible-access.js.map
