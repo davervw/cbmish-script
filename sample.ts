@@ -5,7 +5,13 @@
 
 var cbm = new CbmishConsole();
 cbm.CbmishConsole();
-cbm.removeButtons();
+//cbm.removeButtons();
+
+const verse = findVerse("GENESIS", "1", "1");
+cbm.out(`${verse.book} ${verse.chapter}:${verse.verse}`);
+cbm.newLine();
+cbm.out(verse.text);
+cbm.newLine();
 
 const mainMenu = function() {
     cbm.init();
@@ -769,5 +775,5 @@ const screenC64 = () => {
     addDoubleClickToggleCursorHandler();
 }
 
-mainMenu();
-addDoubleClickToggleCursorHandler();
+//mainMenu();
+//addDoubleClickToggleCursorHandler();
