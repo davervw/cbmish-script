@@ -4,6 +4,9 @@
 // github.com/davervw/cbmish-script
 // davevw.com
 
+type KeyboardEventHandler = (event: KeyboardEvent, cbmkey: string) => void;
+type ClickHandler = (x: number, y: number) => void;
+
 class CbmishConsole {
     private dirtyx = 0;
     private dirtyy = 0;
@@ -673,6 +676,11 @@ class CbmishConsole {
         this.pokeScreen(1024 + offset, this.charCells[offset] ^ 128);
     }
 
+    public onKeyPress : KeyboardEventHandler = null;
+    public onKeyDown :  KeyboardEventHandler = null;
+    public onKeyUp :  KeyboardEventHandler = null;
+    public onClick : ClickHandler = null;
+
     private keypress(event: KeyboardEvent) {
         //console.log(`keypress: ${event.key}`);
         let key = event.key;
@@ -682,10 +690,18 @@ class CbmishConsole {
             key = this.chr$(key.charCodeAt(0)-'A'.charCodeAt(0)+'a'.charCodeAt(0)) ?? '';
         else if (key == '|')
             key = this.chr$(0x7D) ?? '';
-        this.out(key);
+
+        if (this.onKeyPress != null)
+            this.onKeyPress(event, key);
+        else
+            this.out(key);
     }
 
     private keydown(event: KeyboardEvent): boolean {
+        if (this.onKeyDown != null) {
+            this.onKeyDown(event, null);
+            return;
+        }
         const key = event.key;
         const shiftKey = event.shiftKey;
         const ctrlKey = event.ctrlKey;
@@ -856,6 +872,9 @@ class CbmishConsole {
         return [oldx, oldy];
     }
 
+    public getCol() : number { return this.col; }
+    public getRow() : number { return this.row; }
+
     public petsciiPokesChart() {
         this.reverse=false;
         for (let row = 0; row < 16; ++row) {
@@ -934,6 +953,11 @@ class CbmishConsole {
     private onclickcanvas(event: MouseEvent) {
         const x = Math.floor(event.offsetX / this.mouseScale.x);
         const y = Math.floor(event.offsetY / this.mouseScale.y);
+        if (this.onClick != null) {
+            this.onClick(x, y);
+            return;
+        }
+
         let found = false;
         for (let button of this.buttons)
             if (button.checkClick(x, y))

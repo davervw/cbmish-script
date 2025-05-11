@@ -156,6 +156,17 @@ const mainMenu = function() {
             }, 250);
     }
 
+    cbm.locate(b9.left, y+3);
+    cbm.fg = 7;
+    const b18 = cbm.addButton("Snake ");
+    b18.onclick = () => {
+        setTimeout(
+            () => {
+                cbm.removeButtons();
+                snakeDemo();
+            }, 250);
+    } 
+
     cbm.locate(36, 21);
     cbm.fg = 1;
     const b10 = cbm.addButton(cbm.chr$(123));
@@ -168,7 +179,7 @@ const mainMenu = function() {
 
     cbm.locate(x, y+=3);
     cbm.fg = 0;
-    const b11 = cbm.addButton("Knight Dragon Scene  ");
+    const b11 = cbm.addButton("Knight  ");
     b11.onclick = () => {
         setTimeout(
             () => {
@@ -218,7 +229,7 @@ const mainMenu = function() {
     }
 
     cbm.locate(b6.right+2, y);
-    cbm.fg = 4;
+    cbm.fg = 2;
     const b12 = cbm.addButton("Dots   ");
     b12.onclick = () => {
         setTimeout(
@@ -716,7 +727,14 @@ const spriteXorWithNumber = function(image: number[], n: number): number[] {
 const addDoubleClickToggleCursorHandler = () => {
     const consoleElement = document.getElementsByTagName('console')[0];
     const topCanvas = consoleElement.getElementsByClassName("sprites")[0] as HTMLCanvasElement;
-    topCanvas.addEventListener('dblclick', (event: MouseEvent) => toggleBlinkingCursor(), false);
+    topCanvas.removeEventListener('dblclick', toggleBlinkingCursor, false);
+    topCanvas.addEventListener('dblclick', toggleBlinkingCursor, false);
+}
+
+const removeDoubleClickToggleCursorHandler = () => {
+    const consoleElement = document.getElementsByTagName('console')[0];
+    const topCanvas = consoleElement.getElementsByClassName("sprites")[0] as HTMLCanvasElement;
+    topCanvas.removeEventListener('dblclick', toggleBlinkingCursor, false);
 }
 
 const toggleBlinkingCursor = function() {
@@ -767,6 +785,341 @@ const screenC64 = () => {
     cbm.hideCursor();
     cbm.blinkCursor();
     addDoubleClickToggleCursorHandler();
+}
+
+const snakeDemo = () => {
+    const saveColor = cbm.fg;
+    const saveRowCol = cbm.locate(cbm.getCols() - 3, 0);
+
+    removeDoubleClickToggleCursorHandler();
+    cbm.foreground(5);
+    cbm.background(0);
+    cbm.border(0);
+    cbm.hideCursor();
+    cbm.clear();
+    const cols = cbm.getCols();
+    const rows = cbm.getRows();
+    cbm.out(cbm.chr$(18));
+    for (let x=0; x<cols; ++x)
+        cbm.out(' ');
+    for (let y=1; y<rows-1; ++y) {
+        cbm.locate(0, y);
+        cbm.out(' ');
+        cbm.locate(cols-1, y);
+        cbm.out(' ');
+    }
+    cbm.locate(0, rows-1);
+    cbm.out('  ');
+    const link = cbm.addLink('SNAKE', 'https://github.com/davervw/c-snake');
+    link.normal = cbm.chr$(146)+cbm.chr$(2)+'SNAKE'+cbm.chr$(130);
+    link.hover = cbm.chr$(18)+'SNAKE'+cbm.chr$(146);
+    cbm.locate(link.left, link.top);
+    cbm.out(link.normal);
+    cbm.out(cbm.chr$(18)+' Copyright (c) 2025 DAVERVW');
+    while(cbm.getCol() < cols-1)
+        cbm.out(' ');
+    cbm.left();
+    cbm.insert();
+    cbm.out(' ');
+    cbm.out(cbm.chr$(146));
+
+    let snake = {
+        x: 0,
+        y: 0,
+        dx: 0,
+        dy: 0,
+        segments: [],
+        food: { x: 0, y: 0 },
+        speed: 1,
+        dead: false,
+        wait: false,
+        pause: false,
+        keyboardBuffer: [],
+        init: () => {
+            cbm.onKeyPress = (event, cbmkey) => snake.onKeyPress(event, cbmkey);
+            cbm.onKeyDown = (event, cbmkey) => snake.onKeyDown(event, cbmkey);
+            cbm.onClick = (x, y) => snake.onClick(x, y);
+            snake.reset();
+        },
+        advance: () => {
+            if (snake.dead)
+                return;
+            if (!snake.pause) {
+                snake.processKey();
+                snake.x = snake.x + snake.dx;
+                snake.y = snake.y + snake.dy;
+                if (snake.isCollision()) {
+                    snake.die();
+                    return;
+                }
+                const oldScore = snake.segments.length;
+                snake.drawHead();
+                if (snake.x == snake.food.x && snake.y == snake.food.y) {
+                    snake.placeFood();
+                    if (snake.speed > 150)
+                        snake.speed -= 10;
+                } else
+                    snake.eraseTail();
+                const newScore = snake.segments.length;
+                const scoreChanged = (oldScore != newScore);
+                if (scoreChanged)
+                    snake.displayScore();
+            }
+            snake.delay();
+        },
+        isCollision: (): boolean => {
+            if (snake.x < 1 || snake.x >= cols - 1 || snake.y < 1 || snake.y >= rows - 1)
+                return true;
+            const collision = (snake.segments.find(segment => segment.x == snake.x && segment.y == snake.y));
+            if (collision != null && collision != snake.segments[0])
+                return true;
+            return false;
+        },
+        die: () => {
+            snake.x = snake.x - snake.dx;
+            snake.y = snake.y - snake.dy;
+            cbm.locate(snake.x, snake.y);
+            cbm.lowercase = false;
+            cbm.out(cbm.chr$(118));
+            snake.dead = true;
+            snake.wait = true;
+            snake.keyboardBuffer = [];
+            setTimeout(() => snake.wait = false, 1000);
+        },
+        delay: () => {
+            setTimeout(() => snake.advance(), snake.speed);
+        },
+        onKeyPress: (event: KeyboardEvent, cbmkey: string) => {
+            if (snake.dead && snake.wait)
+                return;
+            if (snake.dead) {
+                snake.reset();
+                return;
+            }
+            snake.keyboardBuffer.push(cbmkey);
+        },
+        onKeyDown: (event: KeyboardEvent, cbmkey: string) => {
+            if (event.key == 'Escape') {
+                if (!snake.dead) {
+                    snake.dx = 0;
+                    snake.dy = 0;
+                    snake.die();
+                }
+                snake.exit();
+                return;
+            }
+            if (snake.dead && snake.wait)
+                return;
+            if (snake.dead) {
+                snake.reset();
+                return;
+            }
+            if (event.key == 'Enter') {
+                snake.pause = !snake.pause;
+                if (!snake.pause)
+                    snake.keyboardBuffer = [];
+                return;
+            }
+            if (event.key.length > 1) // avoid doubling up cbmkey 
+                snake.keyboardBuffer.push(event.key)
+        },
+        left: () => {
+            if (snake.dx == 1 && snake.dy == 0) {
+                snake.dx = 0;
+                snake.dy = -1;
+            } else if (snake.dx == 0 && snake.dy == -1) {
+                snake.dx = -1;
+                snake.dy = 0;
+            } else if (snake.dx == -1 && snake.dy == 0) {
+                snake.dx = 0;
+                snake.dy = 1;
+            } else if (snake.dx == 0 && snake.dy == 1) {
+                snake.dx = 1;
+                snake.dy = 0;
+            }
+        },
+        right: () => {
+            if (snake.dx == 1 && snake.dy == 0) {
+                snake.dx = 0;
+                snake.dy = 1;
+            } else if (snake.dx == 0 && snake.dy == 1) {
+                snake.dx = -1;
+                snake.dy = 0;
+            } else if (snake.dx == -1 && snake.dy == 0) {
+                snake.dx = 0;
+                snake.dy = -1;
+            } else if (snake.dx == 0 && snake.dy == -1) {
+                snake.dx = 1;
+                snake.dy = 0;
+            }
+        },
+        reset: () => {
+            snake.clear();
+            cbm.locate(2,2);
+            cbm.out('ARROW KEYS or CLICK to turn');
+            cbm.locate(2,4);
+            cbm.out('Z and / rotate snake');
+            cbm.locate(2,6);
+            cbm.out('ENTER or CLICK border to pause');
+            // display instructions for a while, then start
+            setTimeout(snake.start, 2500);
+        },
+        clear: () => {
+            for (let y = 1; y < rows - 1; ++y) {
+                cbm.locate(1, y);
+                for (let x = 1; x < cols - 1; ++x)
+                    cbm.out(' ');
+            }            
+        },
+        start: () => {
+            snake.x = Math.floor(cols / 2);
+            snake.y = Math.floor(rows / 2);
+            snake.dx = 1;
+            snake.dy = 0;
+            snake.clear();
+            snake.segments = [];
+            snake.drawHead();
+            snake.placeFood();
+            snake.displayScore();
+            snake.dead = false;
+            snake.speed = 300;
+            snake.keyboardBuffer = [];
+            snake.delay();
+        },
+        exit: () => {
+            let _cbm: any = cbm;
+            _cbm.escapePressed = true;
+            if (cbm.getCols() < 40) {
+                cbm.resize();
+                addDoubleClickToggleCursorHandler();
+            }
+            cbm.fg = saveColor;
+            cbm.locate(saveRowCol[1], saveRowCol[0]);
+            cbm.onKeyDown = null;
+            cbm.onKeyPress = null;
+            cbm.onClick = null;
+            onleave(); 
+        },
+        placeFood: () => {
+            while (1) {
+                let x = Math.floor(Math.random() * (cols-2)) + 1;
+                let y = Math.floor(Math.random() * (rows-2)) + 1;
+                let found = snake.segments.find(segment => segment.x == x && segment.y == y);
+                if (found == null) {
+                    snake.food = { x: x, y: y };
+                    cbm.locate(x, y);
+                    cbm.lowercase = false;
+                    cbm.out(cbm.chr$(122));
+                    return;
+                }
+            }
+        },
+        drawHead: () => {
+            cbm.locate(snake.x, snake.y);
+            cbm.lowercase = false;
+            cbm.out(cbm.chr$(119));
+            snake.segments.push({ x: snake.x, y: snake.y });
+            if (snake.segments.length > 1) {
+                const previousSegment = snake.segments[snake.segments.length-2];
+                cbm.locate(previousSegment.x, previousSegment.y);
+                cbm.out(cbm.chr$(113));
+            }
+        },
+        eraseTail: () => {
+            const isHeadOnTail = (snake.segments[0].x == snake.x && snake.segments[0].y == snake.y);
+            if (!isHeadOnTail) {
+                cbm.locate(snake.segments[0].x, snake.segments[0].y);
+                cbm.out(' ');
+            }
+            snake.segments.shift();
+        },
+        displayScore: () => {
+            const score = snake.segments.length.toString().padStart(4);
+            cbm.locate(cols-5, rows-1);
+            cbm.out(cbm.chr$(18)+score+cbm.chr$(146));
+        },
+        processKey: () => {
+            while (1) { // read until no key or recognize key
+                if (snake.keyboardBuffer.length == 0)
+                    return;
+                const key = snake.keyboardBuffer.shift();
+                if (key == 'ArrowUp') {
+                    if (snake.dx != 0 || snake.dy != 1) {
+                        snake.dx = 0;
+                        snake.dy = -1;
+                    }
+                    return;
+                } else if (key == 'ArrowDown') {
+                    if (snake.dx != 0 || snake.dy != -1) {
+                        snake.dx = 0;
+                        snake.dy = 1;
+                    }
+                    return;
+                } else if (key == 'ArrowLeft') {
+                    if (snake.dx != 1 || snake.dy != 0) {
+                        snake.dx = -1;
+                        snake.dy = 0;
+                    }
+                    return;
+                } else if (key == 'ArrowRight') {
+                    if (snake.dx != -1 || snake.dy != 0) {
+                        snake.dx = 1;
+                        snake.dy = 0;
+                    }
+                    return;
+                } else if (key.toLocaleLowerCase() == 'z') {
+                    snake.left();
+                    return;
+                } else if (key == '/') {
+                    snake.right();
+                    return;
+                }
+            }
+        },
+        onClick: (x: number, y: number) => {
+            if (snake.dead) {
+                snake.reset();
+                return;
+            }
+            if (x == 0 || y == 0 || x == cols-1 || y == rows-1) {
+                snake.pause = !snake.pause;
+                return;
+            }
+            if (snake.pause) {
+                snake.pause = false;
+                snake.keyboardBuffer = [];
+            }
+            const centerX = Math.floor(cols / 2);
+            const centerY = Math.floor(rows / 2);
+            const diffX = x - centerX;
+            const diffY = y - centerY;
+            const slope = diffY == 0 ? diffX : diffX / diffY;
+            const slopeThreshold = centerX / centerY;
+            if (diffX < 0 && diffY < 0) {
+                if (slope > slopeThreshold)
+                    snake.keyboardBuffer.push('ArrowLeft');
+                else
+                    snake.keyboardBuffer.push('ArrowUp');
+            } else if (diffX < 0 && diffY >= 0) {
+                if (-slope > slopeThreshold)
+                    snake.keyboardBuffer.push('ArrowLeft');
+                else
+                    snake.keyboardBuffer.push('ArrowDown');
+            } else if (diffX >= 0 && diffY < 0) {
+                if (-slope > slopeThreshold)
+                    snake.keyboardBuffer.push('ArrowRight');
+                else
+                    snake.keyboardBuffer.push('ArrowUp');
+            } else if (diffX >= 0 && diffY >= 0) {
+                if (slope > slopeThreshold)
+                    snake.keyboardBuffer.push('ArrowRight');
+                else
+                    snake.keyboardBuffer.push('ArrowDown');
+            }
+        }
+    };
+
+    snake.init();
 }
 
 mainMenu();

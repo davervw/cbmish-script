@@ -84,6 +84,10 @@ class CbmishConsole {
             { 'key': '-', 'code': 220 },
             { 'key': '=', 'code': 166 },
         ];
+        this.onKeyPress = null;
+        this.onKeyDown = null;
+        this.onKeyUp = null;
+        this.onClick = null;
         this.loresChars = [32, 126, 124, 226, 123, 97, 255, 236,
             108, 127, 225, 251, 98, 252, 254, 160];
         this.onSpriteCollision = (collisionSprites, collisionBackground) => {
@@ -592,10 +596,17 @@ class CbmishConsole {
             key = (_a = this.chr$(key.charCodeAt(0) - 'A'.charCodeAt(0) + 'a'.charCodeAt(0))) !== null && _a !== void 0 ? _a : '';
         else if (key == '|')
             key = (_b = this.chr$(0x7D)) !== null && _b !== void 0 ? _b : '';
-        this.out(key);
+        if (this.onKeyPress != null)
+            this.onKeyPress(event, key);
+        else
+            this.out(key);
     }
     keydown(event) {
         var _a;
+        if (this.onKeyDown != null) {
+            this.onKeyDown(event, null);
+            return;
+        }
         const key = event.key;
         const shiftKey = event.shiftKey;
         const ctrlKey = event.ctrlKey;
@@ -779,6 +790,8 @@ class CbmishConsole {
             this.blinkCursor();
         return [oldx, oldy];
     }
+    getCol() { return this.col; }
+    getRow() { return this.row; }
     petsciiPokesChart() {
         this.reverse = false;
         for (let row = 0; row < 16; ++row) {
@@ -852,6 +865,10 @@ class CbmishConsole {
     onclickcanvas(event) {
         const x = Math.floor(event.offsetX / this.mouseScale.x);
         const y = Math.floor(event.offsetY / this.mouseScale.y);
+        if (this.onClick != null) {
+            this.onClick(x, y);
+            return;
+        }
         let found = false;
         for (let button of this.buttons)
             if (button.checkClick(x, y))
