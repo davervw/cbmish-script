@@ -953,17 +953,15 @@ class CbmishConsole {
     private onclickcanvas(event: MouseEvent) {
         const x = Math.floor(event.offsetX / this.mouseScale.x);
         const y = Math.floor(event.offsetY / this.mouseScale.y);
-        if (this.onClick != null) {
-            this.onClick(x, y);
-            return;
-        }
-
         let found = false;
         for (let button of this.buttons)
             if (button.checkClick(x, y))
                 found = true;
-        if (!found)
+        if (!found) {
+            if (this.onClick != null)
+                this.onClick(x, y);
             this.locate(x, y);
+        }
         event.preventDefault();
     }
 
