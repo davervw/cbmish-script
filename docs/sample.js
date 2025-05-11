@@ -133,7 +133,7 @@ const mainMenu = function () {
     };
     cbm.locate(b9.left, y + 3);
     cbm.fg = 7;
-    const b18 = cbm.addButton("Snake ");
+    const b18 = cbm.addButton("Snake    ");
     b18.onclick = () => {
         setTimeout(() => {
             cbm.removeButtons();
@@ -753,28 +753,27 @@ const snakeDemo = () => {
         advance: () => {
             if (snake.dead)
                 return;
-            if (!snake.pause) {
-                snake.processKey();
-                snake.x = snake.x + snake.dx;
-                snake.y = snake.y + snake.dy;
-                if (snake.isCollision()) {
-                    snake.die();
-                    return;
-                }
-                const oldScore = snake.segments.length;
-                snake.drawHead();
-                if (snake.x == snake.food.x && snake.y == snake.food.y) {
-                    snake.placeFood();
-                    if (snake.speed > 150)
-                        snake.speed -= 10;
-                }
-                else
-                    snake.eraseTail();
-                const newScore = snake.segments.length;
-                const scoreChanged = (oldScore != newScore);
-                if (scoreChanged)
-                    snake.displayScore();
+            if (snake.pause) {
+                snake.delay();
+                return;
             }
+            snake.processKey();
+            snake.x = snake.x + snake.dx;
+            snake.y = snake.y + snake.dy;
+            if (snake.isCollision()) {
+                snake.die();
+                setTimeout(() => snake.wait = false, 1000);
+                return;
+            }
+            snake.drawHead();
+            if (snake.x == snake.food.x && snake.y == snake.food.y) {
+                snake.placeFood();
+                if (snake.speed > 150)
+                    snake.speed -= 10;
+                snake.displayScore();
+            }
+            else
+                snake.eraseTail();
             snake.delay();
         },
         isCollision: () => {
@@ -786,6 +785,7 @@ const snakeDemo = () => {
             return false;
         },
         die: () => {
+            console.log("die");
             snake.x = snake.x - snake.dx;
             snake.y = snake.y - snake.dy;
             cbm.locate(snake.x, snake.y);
@@ -794,7 +794,6 @@ const snakeDemo = () => {
             snake.dead = true;
             snake.wait = true;
             snake.keyboardBuffer = [];
-            setTimeout(() => snake.wait = false, 1000);
         },
         delay: () => {
             setTimeout(() => snake.advance(), snake.speed);
@@ -803,25 +802,25 @@ const snakeDemo = () => {
             if (snake.dead && snake.wait)
                 return;
             if (snake.dead) {
+                snake.dead = false; // avoid multiple resets
                 snake.reset();
                 return;
             }
             snake.keyboardBuffer.push(cbmkey);
         },
         onKeyDown: (event, cbmkey) => {
-            if (event.key == 'Escape') {
-                if (!snake.dead) {
-                    snake.dx = 0;
-                    snake.dy = 0;
-                    snake.die();
-                }
-                snake.exit();
-                return;
-            }
             if (snake.dead && snake.wait)
                 return;
             if (snake.dead) {
+                snake.dead = false; // avoid multiple resets
                 snake.reset();
+                return;
+            }
+            if (event.key == 'Escape') {
+                snake.dx = 0;
+                snake.dy = 0;
+                snake.die();
+                snake.exit();
                 return;
             }
             if (event.key == 'Enter') {
@@ -870,6 +869,7 @@ const snakeDemo = () => {
             }
         },
         reset: () => {
+            console.log("reset");
             snake.clear();
             cbm.locate(2, 2);
             cbm.out('ARROW KEYS or CLICK to turn');
@@ -888,6 +888,7 @@ const snakeDemo = () => {
             }
         },
         start: () => {
+            console.log("start");
             snake.x = Math.floor(cols / 2);
             snake.y = Math.floor(rows / 2);
             snake.dx = 1;
@@ -903,6 +904,7 @@ const snakeDemo = () => {
             snake.delay();
         },
         exit: () => {
+            console.log("exit");
             let _cbm = cbm;
             _cbm.escapePressed = true;
             if (cbm.getCols() < 40) {
@@ -999,6 +1001,9 @@ const snakeDemo = () => {
         },
         onClick: (x, y) => {
             if (snake.dead) {
+                if (snake.wait)
+                    return;
+                snake.dead = false; // avoid multiple resets
                 snake.reset();
                 return;
             }
